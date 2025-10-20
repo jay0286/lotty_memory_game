@@ -156,11 +156,13 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       return;
     }
 
-    // Calculate card layout
+    // Calculate card layout with responsive sizing
     final columns = 4;
-    final cardSpacing = 150.0;
+    final cardSize = size.x / 4.5; // Card size is 1/5 of screen width (allowing space for gaps)
+    final cardSpacing = size.x / 5; // Spacing between card centers
     final startX = (size.x - (columns - 1) * cardSpacing) / 2;
-    final startY = 200.0;
+    final rowSpacing = cardSize * 1.5; // Vertical spacing
+    final startY = size.y * 0.25; // Start at 25% from top
 
     // Create cards
     for (int i = 0; i < stage.totalCards; i++) {
@@ -178,9 +180,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         cardValue: pairId,
         position: Vector2(
           startX + (i % columns) * cardSpacing,
-          startY + (i ~/ columns) * 180,
+          startY + (i ~/ columns) * rowSpacing,
         ),
-        size: Vector2(120, 120),
+        size: Vector2(cardSize, cardSize),
         onTap: _onCardTapped,
       );
       _cards.add(card);

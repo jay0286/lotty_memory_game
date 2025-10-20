@@ -1,4 +1,5 @@
 /// Game state enum
+library;
 import 'package:flutter/foundation.dart';
 
 enum GameState {
