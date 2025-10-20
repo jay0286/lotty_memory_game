@@ -107,10 +107,10 @@ class GameConfig {
   // ==================== 파워업 설정 ====================
 
   /// 매칭 실패 후 힌트 아이콘 출현 확률 (0.0~1.0)
-  static const double hintPowerupChance = 0.05; // 5%
+  static const double hintPowerupChance = 0.20; // 5%
 
   /// 매칭 실패 후 하트 아이콘 출현 확률 (0.0~1.0)
-  static const double heartPowerupChance = 0.20; // 10%
+  static const double heartPowerupChance = 0.30; // 10%
 
   /// 힌트 사용시 카드 공개 시간 (초)
   static const double hintRevealDuration = 1.0;

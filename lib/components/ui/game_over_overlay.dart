@@ -1,8 +1,9 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 /// Displays game over or win message
-class GameOverOverlay extends PositionComponent {
+class GameOverOverlay extends PositionComponent with TapCallbacks {
   final bool isWin;
   final int finalScore;
   final VoidCallback? onRestart;
@@ -78,7 +79,7 @@ class GameOverOverlay extends PositionComponent {
 
     // Restart hint text
     final hintText = TextComponent(
-      text: customMessage ?? 'Press R to Restart',
+      text: customMessage ?? 'Tap to Restart',
       position: Vector2(size.x / 2, size.y / 2 + 80),
       anchor: Anchor.center,
       textRenderer: TextPaint(
@@ -97,5 +98,10 @@ class GameOverOverlay extends PositionComponent {
       ),
     );
     add(hintText);
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    onRestart?.call();
   }
 }

@@ -562,12 +562,12 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (isWin) {
       if (StageManager.instance.hasNextStage) {
         final nextStage = StageManager.instance.currentStageNumber + 1;
-        message = 'Press R for Stage $nextStage';
+        message = 'Tap for Stage $nextStage';
       } else {
-        message = 'All Stages Complete!\nPress R to Restart';
+        message = 'All Stages Complete!\nTap to Restart';
       }
     } else {
-      message = 'Press R to Retry';
+      message = 'Tap to Retry';
     }
 
     _gameOverOverlay = GameOverOverlay(
