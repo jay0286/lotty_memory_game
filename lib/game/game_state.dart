@@ -1,6 +1,7 @@
 /// Game state enum
 library;
 import 'package:flutter/foundation.dart';
+import '../config/game_config.dart';
 
 enum GameState {
   shuffling,
@@ -66,7 +67,7 @@ class GameStateManager {
     if (!isGameActive) return;
 
     _foundPairs++;
-    addScore(100); // 100 points per match
+    addScore(GameConfig.scorePerMatch);
 
     if (_foundPairs >= totalPairs) {
       _state = GameState.gameWon;

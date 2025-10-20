@@ -1,12 +1,24 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'dart:math' as math;
+import 'water_ripple.dart';
+import '../config/game_config.dart';
 
 /// Card state enum
 enum CardState {
   faceDown, // Shows pig tube
   faceUp, // Shows number
   matched, // Card has been matched
+}
+
+/// Match animation type
+enum MatchAnimationType {
+  splash, // Jump and splash
+}
+
+/// Fail animation type
+enum FailAnimationType {
+  shake, // Shake left and right
 }
 
 /// Represents a memory card with a pig tube on the back and a number on the front
@@ -18,15 +30,16 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
   CardState _state = CardState.faceDown;
   CardState get state => _state;
+  bool get isCollisionEnabled => _collisionEnabled;
 
   // Animation properties
   double _flipProgress = 0.0; // 0.0 = face down, 1.0 = face up
   bool _isFlipping = false;
-  static const double _flipDuration = 0.3; // seconds
+  static const double _flipDuration = GameConfig.cardFlipDuration;
 
   // Floating movement properties
   Vector2 velocity = Vector2.zero();
-  double floatSpeed = 30.0; // pixels per second
+  double floatSpeed = GameConfig.cardFloatSpeed;
   double floatTime = 0.0; // accumulated time for sin/cos calculations
   final math.Random _random = math.Random();
 
@@ -35,6 +48,21 @@ class PigCard extends SpriteComponent with TapCallbacks {
   late double _floatOffsetY;
   late double _floatFrequencyX;
   late double _floatFrequencyY;
+
+  // Water ripple parameters
+  double _rippleTimer = 0.0;
+  double _rippleInterval = GameConfig.rippleInterval;
+
+  // Match/Fail animation properties
+  bool _isPlayingMatchAnimation = false;
+  bool _isPlayingFailAnimation = false;
+  double _animationTimer = 0.0;
+  Vector2? _originalPosition;
+  double _originalAlpha = 1.0;
+  Function()? _onFailAnimationComplete;
+
+  // Collision detection flag
+  bool _collisionEnabled = true;
 
   PigCard({
     required this.backSprite,
@@ -52,8 +80,10 @@ class PigCard extends SpriteComponent with TapCallbacks {
     // Initialize random floating parameters for each card
     _floatOffsetX = _random.nextDouble() * math.pi * 2;
     _floatOffsetY = _random.nextDouble() * math.pi * 2;
-    _floatFrequencyX = 0.5 + _random.nextDouble() * 0.5; // 0.5 to 1.0
-    _floatFrequencyY = 0.5 + _random.nextDouble() * 0.5; // 0.5 to 1.0
+    _floatFrequencyX = GameConfig.cardFloatFrequencyMin +
+        _random.nextDouble() * (GameConfig.cardFloatFrequencyMax - GameConfig.cardFloatFrequencyMin);
+    _floatFrequencyY = GameConfig.cardFloatFrequencyMin +
+        _random.nextDouble() * (GameConfig.cardFloatFrequencyMax - GameConfig.cardFloatFrequencyMin);
 
     // Initialize random velocity
     final angle = _random.nextDouble() * math.pi * 2;
@@ -98,18 +128,64 @@ class PigCard extends SpriteComponent with TapCallbacks {
     _isFlipping = true;
   }
 
-  /// Mark card as matched
+  /// Mark card as matched and play success animation
   void setMatched() {
     _state = CardState.matched;
-    // Could add special animation or effect here
+    _playMatchSuccessAnimation();
+  }
+
+  /// Play match success animation (splash only)
+  void _playMatchSuccessAnimation() {
+    // First flip to back side
+    sprite = backSprite;
+    _flipProgress = 0.0;
+    _state = CardState.matched;
+
+    _isPlayingMatchAnimation = true;
+    _animationTimer = 0.0;
+    _originalPosition = position.clone();
+
+    // Disable collision detection during animation
+    _collisionEnabled = false;
+
+    // Create large ripple effect on match
+    _createMatchSuccessRipple();
+  }
+
+  /// Play match fail animation
+  void playMatchFailAnimation({Function()? onComplete}) {
+    _isPlayingFailAnimation = true;
+    _animationTimer = 0.0;
+    _originalPosition = position.clone();
+    _onFailAnimationComplete = onComplete;
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
+    // Update match success animation
+    if (_isPlayingMatchAnimation) {
+      _updateMatchSuccessAnimation(dt);
+      return; // Don't update other animations while playing match animation
+    }
+
+    // Update match fail animation
+    if (_isPlayingFailAnimation) {
+      _updateMatchFailAnimation(dt);
+      return; // Don't update other animations while playing fail animation
+    }
+
     // Update floating movement
     _updateFloatingMovement(dt);
+
+    // Generate water ripples periodically
+    _rippleTimer += dt;
+
+    if (_rippleTimer >= _rippleInterval) {
+      _createWaterRipple();
+      _rippleTimer = 0.0;
+    }
 
     if (_isFlipping) {
       // Determine target flip progress based on state
@@ -155,6 +231,99 @@ class PigCard extends SpriteComponent with TapCallbacks {
       velocity.x * dt + floatX * dt,
       velocity.y * dt + floatY * dt,
     ));
+  }
+
+  /// Create a water ripple effect at the card's current position
+  void _createWaterRipple() {
+    if (parent == null) return;
+
+    final ripple = WaterRipple(
+      startPosition: position.clone(),
+      maxRadius: size.x * GameConfig.rippleMaxRadiusMultiplier,
+      duration: GameConfig.rippleDuration,
+    );
+
+    // Add ripple to parent (the game world) so it stays in place
+    parent!.add(ripple);
+  }
+
+  /// Create a large ripple for match success
+  void _createMatchSuccessRipple() {
+    if (parent == null) return;
+
+    final ripple = WaterRipple(
+      startPosition: position.clone(),
+      maxRadius: size.x * GameConfig.rippleMaxRadiusMultiplier * GameConfig.matchSuccessRippleMultiplier,
+      duration: GameConfig.rippleDuration * 1.5,
+    );
+
+    parent!.add(ripple);
+  }
+
+  /// Update match success animation
+  void _updateMatchSuccessAnimation(double dt) {
+    _animationTimer += dt;
+    final progress = (_animationTimer / GameConfig.matchSuccessAnimationDuration).clamp(0.0, 1.0);
+
+    if (_originalPosition == null) return;
+
+    // Splash animation: jump up and fade out
+    _updateSplashAnimation(progress);
+
+    // Remove card when animation completes
+    if (progress >= 1.0) {
+      removeFromParent();
+    }
+  }
+
+  /// Update splash animation (card jumps and disappears)
+  void _updateSplashAnimation(double progress) {
+    if (_originalPosition == null) return;
+
+    // Parabolic jump trajectory
+    final jumpProgress = math.sin(progress * math.pi);
+
+    // Move up in arc
+    position.y = _originalPosition!.y - (GameConfig.jumpAnimationHeight * jumpProgress);
+
+    // Fade out in second half
+    if (progress > 0.5) {
+      opacity = 1.0 - ((progress - 0.5) * 2.0);
+    }
+
+    // Rotate while jumping
+    angle = progress * math.pi * 2;
+
+    // Scale pulse at peak
+    final pulseProgress = math.sin(progress * math.pi);
+    final scaleValue = 1.0 + (pulseProgress * 0.3);
+    scale = Vector2.all(scaleValue);
+  }
+
+  /// Update match fail animation (shake)
+  void _updateMatchFailAnimation(double dt) {
+    _animationTimer += dt;
+    final progress = (_animationTimer / GameConfig.matchFailAnimationDuration).clamp(0.0, 1.0);
+
+    if (_originalPosition == null) return;
+
+    if (progress < 1.0) {
+      // Shake effect: fast oscillation that decreases over time
+      final shakeFrequency = 20.0; // Hz
+      final shakeAmount = GameConfig.shakeAnimationIntensity * (1.0 - progress);
+      final offset = math.sin(_animationTimer * shakeFrequency * math.pi * 2) * shakeAmount;
+
+      position.x = _originalPosition!.x + offset;
+    } else {
+      // Animation complete, return to original position
+      position.x = _originalPosition!.x;
+      _isPlayingFailAnimation = false;
+      _originalPosition = null;
+
+      // Call completion callback
+      _onFailAnimationComplete?.call();
+      _onFailAnimationComplete = null;
+    }
   }
 
   /// Handle boundary collision - bounce off edges
@@ -207,8 +376,7 @@ class PigCard extends SpriteComponent with TapCallbacks {
       final velocityAlongDirection = relativeVelocity.dot(direction);
 
       if (velocityAlongDirection < 0) {
-        final bounce = 0.8; // Bounciness factor
-        final impulse = direction * velocityAlongDirection * bounce;
+        final impulse = direction * velocityAlongDirection * GameConfig.cardBounceFactor;
         velocity.sub(impulse);
         other.velocity.add(impulse);
       }

@@ -10,6 +10,7 @@ import '../components/pig_card.dart';
 import '../components/ui/score_display.dart';
 import '../components/ui/lives_display.dart';
 import '../components/ui/game_over_overlay.dart';
+import '../config/game_config.dart';
 import 'game_state.dart';
 import 'stage_config.dart';
 
@@ -24,7 +25,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   double _matchCheckTimer = 0.0;
 
   double _shufflingTimer = 0.0;
-  final double _shufflingDuration = 1.0;
+  final double _shufflingDuration = GameConfig.shufflingDuration;
   double _previewTimer = 0.0;
   double _previewDuration = 2.0; // Will be set from stage config
 
@@ -79,15 +80,19 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (gameState.state == GameState.shuffling ||
         gameState.state == GameState.preview ||
         gameState.state == GameState.playing) {
-      // Handle boundary collisions for all cards
+      // Handle boundary collisions for all cards (only if collision enabled)
       for (final card in _cards) {
-        card.handleBoundary(size);
+        if (card.isCollisionEnabled) {
+          card.handleBoundary(size);
+        }
       }
 
-      // Handle card-to-card collisions
+      // Handle card-to-card collisions (only if both cards have collision enabled)
       for (int i = 0; i < _cards.length; i++) {
         for (int j = i + 1; j < _cards.length; j++) {
-          if (_cards[i].collidesWith(_cards[j])) {
+          if (_cards[i].isCollisionEnabled &&
+              _cards[j].isCollisionEnabled &&
+              _cards[i].collidesWith(_cards[j])) {
             _cards[i].resolveCollision(_cards[j]);
           }
         }
@@ -97,7 +102,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Match checking should only happen during playing
     if (gameState.state == GameState.playing && _isProcessingMatch) {
       _matchCheckTimer += dt;
-      if (_matchCheckTimer >= 1.0) {
+      if (_matchCheckTimer >= GameConfig.matchCheckDelay) {
         _checkMatch();
         _matchCheckTimer = 0.0;
         _isProcessingMatch = false;
@@ -157,12 +162,12 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     }
 
     // Calculate card layout with responsive sizing
-    final columns = 4;
-    final cardSize = size.x / 4.5; // Card size is 1/5 of screen width (allowing space for gaps)
-    final cardSpacing = size.x / 5; // Spacing between card centers
+    final columns = GameConfig.cardLayoutColumns;
+    final cardSize = size.x * GameConfig.cardSizeFraction;
+    final cardSpacing = size.x * GameConfig.cardSpacingFraction;
     final startX = (size.x - (columns - 1) * cardSpacing) / 2;
-    final rowSpacing = cardSize * 1.5; // Vertical spacing
-    final startY = size.y * 0.25; // Start at 25% from top
+    final rowSpacing = cardSize * GameConfig.cardRowSpacingMultiplier;
+    final startY = size.y * GameConfig.cardLayoutStartY;
 
     // Create cards
     for (int i = 0; i < stage.totalCards; i++) {
@@ -295,14 +300,22 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (_firstSelectedCard == null || _secondSelectedCard == null) return;
 
     if (_firstSelectedCard!.cardValue == _secondSelectedCard!.cardValue) {
-      // Match found!
+      // Match found! Play success animation (cards will be removed by animation)
       _firstSelectedCard!.setMatched();
       _secondSelectedCard!.setMatched();
       gameState.registerMatch();
     } else {
-      // No match - flip cards back
-      _firstSelectedCard!.flipToFaceDown();
-      _secondSelectedCard!.flipToFaceDown();
+      // No match - play fail animation then flip back
+      final firstCard = _firstSelectedCard;
+      final secondCard = _secondSelectedCard;
+
+      _firstSelectedCard!.playMatchFailAnimation(onComplete: () {
+        firstCard?.flipToFaceDown();
+      });
+      _secondSelectedCard!.playMatchFailAnimation(onComplete: () {
+        secondCard?.flipToFaceDown();
+      });
+
       gameState.loseLife();
     }
 
@@ -360,9 +373,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Load next stage (or restart current stage)
   void _loadNextStage() {
-    // Remove all cards
+    // Remove all cards (only if they still have a parent)
     for (final card in _cards) {
-      remove(card);
+      if (card.parent != null) {
+        remove(card);
+      }
     }
     _cards.clear();
 
