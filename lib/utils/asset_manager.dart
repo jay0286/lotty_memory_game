@@ -5,6 +5,36 @@ import 'package:flame/extensions.dart';
 import 'sprite_data.dart';
 import 'xml_parser.dart';
 
+/// Card category group - defines which categories can match with each other
+enum CardCategoryGroup {
+  numeric,  // numbers and dice can match with each other (1 = 1)
+  color,    // colors only match with same color
+  shape,    // shapes only match with same shape
+}
+
+/// Card category types for different sprite sets
+enum CardCategory {
+  numbers,
+  dice,
+  colors,
+  shapes,
+}
+
+/// Extension to get the group for each category
+extension CardCategoryExtension on CardCategory {
+  CardCategoryGroup get group {
+    switch (this) {
+      case CardCategory.numbers:
+      case CardCategory.dice:
+        return CardCategoryGroup.numeric;
+      case CardCategory.colors:
+        return CardCategoryGroup.color;
+      case CardCategory.shapes:
+        return CardCategoryGroup.shape;
+    }
+  }
+}
+
 /// Manages all game assets including sprites and images
 class AssetManager {
   static AssetManager? _instance;
@@ -16,6 +46,9 @@ class AssetManager {
   late AtlasData _tubesAtlasData;
   late ui.Image _numbersImage;
   late ui.Image _tubesImage;
+
+  // Map to store sprites by category
+  final Map<CardCategory, List<Sprite>> _categorySprites = {};
 
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
@@ -44,6 +77,13 @@ class AssetManager {
     );
 
     _isLoaded = true;
+
+    // Build category sprite maps AFTER setting _isLoaded = true
+    _categorySprites[CardCategory.numbers] = getNumberCardSprites();
+    _categorySprites[CardCategory.dice] = getDiceCardSprites();
+    // TODO: Add colors and shapes when sprite sheets are ready
+    // _categorySprites[CardCategory.colors] = getColorCardSprites();
+    // _categorySprites[CardCategory.shapes] = getShapeCardSprites();
   }
 
   /// Get sprite by name from numbers atlas
@@ -122,4 +162,9 @@ class AssetManager {
 
   AtlasData get numbersAtlasData => _numbersAtlasData;
   AtlasData get tubesAtlasData => _tubesAtlasData;
+
+  /// Get sprites for a specific category
+  List<Sprite> getSpritesForCategory(CardCategory category) {
+    return _categorySprites[category] ?? [];
+  }
 }

@@ -12,6 +12,7 @@ enum GameState {
 /// Manages the game state and logic
 class GameStateManager {
   int totalPairs;
+  int maxLives = 5;
   int _foundPairs = 0;
   int _score = 0;
   int _lives = 5;
@@ -34,6 +35,10 @@ class GameStateManager {
   GameState get state => _state;
   int get score => _score;
   int get lives => _lives;
+  set lives(int value) {
+    _lives = value;
+    onLivesChanged?.call();
+  }
   int get foundPairs => _foundPairs;
 
   /// Add score for a successful match
@@ -87,7 +92,7 @@ class GameStateManager {
   void reset() {
     _foundPairs = 0;
     _score = 0;
-    _lives = 5;
+    _lives = maxLives;
     _state = GameState.shuffling;
 
     onScoreChanged?.call();

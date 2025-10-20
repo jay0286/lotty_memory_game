@@ -6,12 +6,14 @@ class GameOverOverlay extends PositionComponent {
   final bool isWin;
   final int finalScore;
   final VoidCallback? onRestart;
+  final String? customMessage;
 
   GameOverOverlay({
     required this.isWin,
     required this.finalScore,
     required Vector2 gameSize,
     this.onRestart,
+    this.customMessage,
   }) : super(
           size: gameSize,
           position: Vector2.zero(),
@@ -76,7 +78,7 @@ class GameOverOverlay extends PositionComponent {
 
     // Restart hint text
     final hintText = TextComponent(
-      text: 'Press R to Restart',
+      text: customMessage ?? 'Press R to Restart',
       position: Vector2(size.x / 2, size.y / 2 + 80),
       anchor: Anchor.center,
       textRenderer: TextPaint(

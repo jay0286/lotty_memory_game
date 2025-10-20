@@ -11,6 +11,7 @@ import '../components/ui/score_display.dart';
 import '../components/ui/lives_display.dart';
 import '../components/ui/game_over_overlay.dart';
 import 'game_state.dart';
+import 'stage_config.dart';
 
 class LottyMemoryGame extends FlameGame with KeyboardEvents {
   late AssetManager assetManager;
@@ -25,7 +26,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   double _shufflingTimer = 0.0;
   final double _shufflingDuration = 1.0;
   double _previewTimer = 0.0;
-  final double _previewDuration = 2.0;
+  double _previewDuration = 2.0; // Will be set from stage config
 
   // UI components
   late ScoreDisplay _scoreDisplay;
@@ -43,78 +44,17 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     assetManager = AssetManager.instance;
     await assetManager.loadAssets();
 
+    // Load stages
+    await StageManager.instance.loadStages();
+
     // Load and add background
     await _loadBackground();
 
     // Initialize UI first
     await _initializeUI();
 
-    final numberSprites = assetManager.getNumberCardSprites();
-    print('Loaded ${numberSprites.length} number card sprites');
-
-    final diceSprites = assetManager.getDiceCardSprites();
-    print('Loaded ${diceSprites.length} dice card sprites');
-
-    final tubePigSprites = assetManager.getTubePigSprites();
-    print('Loaded ${tubePigSprites.length} tube pig sprites');
-
-    // Create test cards with matching pairs
-    if (numberSprites.isNotEmpty &&
-        diceSprites.isNotEmpty &&
-        tubePigSprites.isNotEmpty) {
-
-      // Create 4 pairs (8 cards total) for matching game
-      final cardValues = [1, 1, 2, 2, 3, 3, 4, 4]..shuffle();
-
-      // Update game state with correct pair count
-      gameState = GameStateManager(
-        totalPairs: 4,
-      onScoreChanged: () {
-        print('Score: ${gameState.score}');
-        _scoreDisplay.updateScore(gameState.score);
-      },
-      onLivesChanged: () {
-        print('L2ives: ${gameState.lives}');
-        _livesDisplay.updateLives(gameState.lives);
-      },
-      onGameOver: () {
-        print('Game Over!');
-        _showGameOverScreen(false);
-      },
-      onGameWon: () {
-        print('You Won!');
-        _showGameOverScreen(true);
-      },
-      );
-      // Decide which sprite set to use for this game
-      final random = Random();
-
-      for (int i = 0; i < 8; i++) {
-      final useDiceSprites = random.nextBool();
-      final frontSprites =
-          useDiceSprites ? diceSprites : numberSprites;
-        print('Using ${useDiceSprites ? "dice" : "number"} sprites for this game.');
-        final card = PigCard(
-          backSprite: tubePigSprites[i % tubePigSprites.length],
-          frontSprite:
-              frontSprites[(cardValues[i] - 1) % frontSprites.length],
-          cardValue: cardValues[i],
-          position: Vector2(
-            200 + (i % 4) * 150,
-            200 + (i ~/ 4) * 180,
-          ),
-          size: Vector2(120, 120),
-          onTap: _onCardTapped,
-        );
-        _cards.add(card);
-        add(card);
-      }
-
-      print('Created ${_cards.length} cards with ${gameState.totalPairs} pairs');
-
-      // Start preview after caxrds are created
-      _startPreview();
-    }
+    // Initialize cards based on current stage
+    await _initializeCards();
 
   }
 
@@ -165,6 +105,114 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     }
   }
 
+  /// Initialize cards based on current stage configuration
+  Future<void> _initializeCards() async {
+    final stage = StageManager.instance.currentStage;
+    final random = Random();
+
+    // Set preview duration from stage config
+    _previewDuration = stage.previewDuration;
+
+    // Generate card values (matching group IDs)
+    final cardValues = <int>[];
+    for (int i = 1; i <= stage.pairs; i++) {
+      cardValues.add(i);
+      cardValues.add(i);
+    }
+    cardValues.shuffle();
+
+    // Assign category groups and categories to each pair
+    // Step 1: Group available categories by their group type
+    final categoryGroups = <CardCategoryGroup, List<CardCategory>>{};
+    for (final category in stage.categories) {
+      categoryGroups.putIfAbsent(category.group, () => []).add(category);
+    }
+
+    // Step 2: For each pair, assign a group and then random categories from that group
+    final pairGroupAssignments = <int, CardCategoryGroup>{};
+    final cardCategoryAssignments = <int, CardCategory>{}; // card index -> category
+
+    for (int pairId = 1; pairId <= stage.pairs; pairId++) {
+      // Pick a random group from available groups
+      final availableGroups = categoryGroups.keys.toList();
+      final selectedGroup = availableGroups[random.nextInt(availableGroups.length)];
+      pairGroupAssignments[pairId] = selectedGroup;
+    }
+
+    // Step 3: Assign categories to each individual card
+    for (int i = 0; i < stage.totalCards; i++) {
+      final pairId = cardValues[i];
+      final group = pairGroupAssignments[pairId]!;
+      final categoriesInGroup = categoryGroups[group]!;
+
+      // Each card in the pair can have a different category from the same group
+      final category = categoriesInGroup[random.nextInt(categoriesInGroup.length)];
+      cardCategoryAssignments[i] = category;
+    }
+
+    // Get tube pig sprites
+    final tubePigSprites = assetManager.getTubePigSprites();
+    if (tubePigSprites.isEmpty) {
+      return;
+    }
+
+    // Calculate card layout
+    final columns = 4;
+    final cardSpacing = 150.0;
+    final startX = (size.x - (columns - 1) * cardSpacing) / 2;
+    final startY = 200.0;
+
+    // Create cards
+    for (int i = 0; i < stage.totalCards; i++) {
+      final pairId = cardValues[i];
+      final category = cardCategoryAssignments[i]!;
+      final frontSprites = assetManager.getSpritesForCategory(category);
+
+      if (frontSprites.isEmpty) {
+        continue;
+      }
+
+      final card = PigCard(
+        backSprite: tubePigSprites[i % tubePigSprites.length],
+        frontSprite: frontSprites[(pairId - 1) % frontSprites.length],
+        cardValue: pairId,
+        position: Vector2(
+          startX + (i % columns) * cardSpacing,
+          startY + (i ~/ columns) * 180,
+        ),
+        size: Vector2(120, 120),
+        onTap: _onCardTapped,
+      );
+      _cards.add(card);
+      add(card);
+    }
+
+    // Initialize game state with stage settings
+    gameState = GameStateManager(
+      totalPairs: stage.pairs,
+      onScoreChanged: () {
+        _scoreDisplay.updateScore(gameState.score);
+      },
+      onLivesChanged: () {
+        _livesDisplay.updateLives(gameState.lives);
+      },
+      onGameOver: () {
+        _showGameOverScreen(false);
+      },
+      onGameWon: () {
+        _showGameOverScreen(true);
+      },
+    );
+
+    // Set lives from stage config
+    gameState.maxLives = stage.lives;
+    gameState.lives = stage.lives;
+    _livesDisplay.updateLives(stage.lives);
+
+    // Start preview after cards are created
+    _startPreview();
+  }
+
   Future<void> _loadBackground() async {
     final backgroundSprite = await loadSprite('background_pool.png');
 
@@ -206,22 +254,18 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Initialize UI components
   Future<void> _initializeUI() async {
-    print('Initializing UI components...');
-
     // Create score display (top left)
     _scoreDisplay = ScoreDisplay(
       position: Vector2(20, 20),
-    ); // Draw on top
+    );
     add(_scoreDisplay);
-    print('Score display added at (20, 20)');
 
     // Create lives display (top right)
     _livesDisplay = LivesDisplay(
       position: Vector2(size.x - 20, 20),
       maxLives: 5,
-    ); // Draw on top
+    );
     add(_livesDisplay);
-    print('Lives display added at (${size.x - 20}, 20)');
   }
 
 
@@ -253,13 +297,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _firstSelectedCard!.setMatched();
       _secondSelectedCard!.setMatched();
       gameState.registerMatch();
-      print('Match! Score: ${gameState.score}');
     } else {
       // No match - flip cards back
       _firstSelectedCard!.flipToFaceDown();
       _secondSelectedCard!.flipToFaceDown();
       gameState.loseLife();
-      print('No match. Lives: ${gameState.lives}');
     }
 
     // Reset selection
@@ -269,16 +311,29 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Show game over screen
   void _showGameOverScreen(bool isWin) {
+    String message;
+    if (isWin) {
+      if (StageManager.instance.hasNextStage) {
+        final nextStage = StageManager.instance.currentStageNumber + 1;
+        message = 'Press R for Stage $nextStage';
+      } else {
+        message = 'All Stages Complete!\nPress R to Restart';
+      }
+    } else {
+      message = 'Press R to Retry';
+    }
+
     _gameOverOverlay = GameOverOverlay(
       isWin: isWin,
       finalScore: gameState.score,
       gameSize: size,
       onRestart: _restartGame,
+      customMessage: message,
     )..priority = 200; // Draw on top of everything
     add(_gameOverOverlay!);
   }
 
-  /// Restart the game
+  /// Restart the game (or move to next stage)
   void _restartGame() {
     // Remove game over overlay
     if (_gameOverOverlay != null) {
@@ -286,13 +341,28 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _gameOverOverlay = null;
     }
 
-    // Reset game state
-    gameState.reset();
-
-    // Reset all cards
-    for (final card in _cards) {
-      card.reset();
+    // If won and there's a next stage, advance
+    if (gameState.state == GameState.gameWon &&
+        StageManager.instance.hasNextStage) {
+      StageManager.instance.nextStage();
+      _loadNextStage();
+    } else if (gameState.state == GameState.gameOver) {
+      // If game over, reset to first stage
+      StageManager.instance.reset();
+      _loadNextStage();
+    } else {
+      // Otherwise just restart current stage
+      _loadNextStage();
     }
+  }
+
+  /// Load next stage (or restart current stage)
+  void _loadNextStage() {
+    // Remove all cards
+    for (final card in _cards) {
+      remove(card);
+    }
+    _cards.clear();
 
     // Reset selection
     _firstSelectedCard = null;
@@ -301,6 +371,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _matchCheckTimer = 0.0;
     _shufflingTimer = 0.0;
     _previewTimer = 0.0;
+
+    // Reinitialize cards with new stage config
+    _initializeCards();
   }
 
   /// Handle keyboard input

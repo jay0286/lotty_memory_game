@@ -1,0 +1,36 @@
+{
+  "stages": [
+    {
+      "id": 1,
+      "name": "Tutorial - Numbers",
+      "pairs": 4,
+      "categories": ["numbers"],
+      "lives": 5,
+      "previewDuration": 2.0
+    },
+    {
+      "id": 2,
+      "name": "Easy Mix",
+      "pairs": 5,
+      "categories": ["numbers", "dice"],
+      "lives": 5,
+      "previewDuration": 2.0
+    },
+    {
+      "id": 3,
+      "name": "Medium Challenge",
+      "pairs": 6,
+      "categories": ["numbers", "dice"],
+      "lives": 4,
+      "previewDuration": 2.5
+    },
+    {
+      "id": 4,
+      "name": "Hard Mode",
+      "pairs": 7,
+      "categories": ["numbers", "dice"],
+      "lives": 3,
+      "previewDuration": 3.0
+    }
+  ]
+}
