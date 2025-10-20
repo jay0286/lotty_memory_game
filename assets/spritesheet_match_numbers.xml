@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker https://www.codeandweb.com/texturepacker -->
+<!-- $TexturePacker:SmartUpdate:1862cb7272e0d0014f95f4e32b28fa0a:e15360b3e8bf8ab5e3031799b5530fa6:44afb015089b5baf441e54b6b97271ed$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+pX => x pos of the pivot point (relative to sprite width)
+pY => y pos of the pivot point (relative to sprite height)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+with polygon mode enabled:
+vertices   => points in sprite coordinate system (x0,y0,x1,y1,x2,y2, ...)
+verticesUV => points in sheet coordinate system (x0,y0,x1,y1,x2,y2, ...)
+triangles  => sprite triangulation, 3 vertex indices per triangle
+-->
+<TextureAtlas imagePath="lotty_memory-0.png" width="4050" height="900">
+    <sprite n="dice card_01.png" x="1" y="1" w="448" h="448"/>
+    <sprite n="dice card_02.png" x="1" y="451" w="448" h="448"/>
+    <sprite n="dice card_03.png" x="451" y="1" w="448" h="448"/>
+    <sprite n="dice card_04.png" x="451" y="451" w="448" h="448"/>
+    <sprite n="dice card_05.png" x="901" y="1" w="448" h="448"/>
+    <sprite n="dice card_06.png" x="901" y="451" w="448" h="448"/>
+    <sprite n="dice card_07.png" x="1351" y="1" w="448" h="448"/>
+    <sprite n="dice card_08.png" x="1351" y="451" w="448" h="448"/>
+    <sprite n="dice card_09.png" x="1801" y="1" w="448" h="448"/>
+    <sprite n="number card_01.png" x="1801" y="451" w="448" h="448"/>
+    <sprite n="number card_02.png" x="2251" y="1" w="448" h="448"/>
+    <sprite n="number card_03.png" x="2251" y="451" w="448" h="448"/>
+    <sprite n="number card_04.png" x="2701" y="1" w="448" h="448"/>
+    <sprite n="number card_05.png" x="2701" y="451" w="448" h="448"/>
+    <sprite n="number card_06.png" x="3151" y="1" w="448" h="448"/>
+    <sprite n="number card_07.png" x="3601" y="1" w="448" h="448"/>
+    <sprite n="number card_08.png" x="3151" y="451" w="448" h="448"/>
+    <sprite n="number card_09.png" x="3601" y="451" w="448" h="448"/>
+</TextureAtlas>
