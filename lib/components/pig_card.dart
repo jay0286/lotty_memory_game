@@ -267,13 +267,16 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
     if (_originalPosition == null) return;
 
-    // Splash animation: jump up and fade out
-    _updateSplashAnimation(progress);
-
     // Remove card when animation completes
     if (progress >= 1.0) {
-      removeFromParent();
+      if (parent != null) {
+        removeFromParent();
+      }
+      return; // Stop updating after removal
     }
+
+    // Splash animation: jump up and fade out
+    _updateSplashAnimation(progress);
   }
 
   /// Update splash animation (card jumps and disappears)

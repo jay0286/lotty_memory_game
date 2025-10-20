@@ -41,7 +41,7 @@ class WaterRipple extends PositionComponent {
     _currentAlpha = 1.0 - progress;
 
     // Remove when animation is complete
-    if (_currentTime >= duration) {
+    if (_currentTime >= duration && parent != null) {
       removeFromParent();
     }
   }

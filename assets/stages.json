@@ -2,35 +2,163 @@
   "stages": [
     {
       "id": 1,
-      "name": "Tutorial - Numbers",
+      "name": "Stage 1: 워밍업",
       "pairs": 4,
       "categories": ["numbers"],
-      "lives": 5,
-      "previewDuration": 2.0
+      "lives": 4,
+      "previewDuration": 3.0
     },
     {
       "id": 2,
-      "name": "Easy Mix",
+      "name": "Stage 2: 쉬운 시작",
+      "pairs": 4,
+      "categories": ["numbers", "dice"],
+      "lives": 3,
+      "previewDuration": 3.0
+    },
+    {
+      "id": 3,
+      "name": "Stage 3: 조금 더",
       "pairs": 5,
+      "categories": ["numbers", "dice"],
+      "lives": 5,
+      "previewDuration": 3.0
+    },
+    {
+      "id": 4,
+      "name": "Stage 4: 속도 향상",
+      "pairs": 5,
+      "categories": ["numbers", "dice"],
+      "lives": 4,
+      "previewDuration": 3.0
+    },
+    {
+      "id": 5,
+      "name": "Stage 5: 도전 시작",
+      "pairs": 6,
+      "categories": ["numbers", "dice"],
+      "lives": 5,
+      "previewDuration": 3.0
+    },
+    {
+      "id": 6,
+      "name": "Stage 6: 집중력 테스트",
+      "pairs": 6,
       "categories": ["numbers", "dice"],
       "lives": 5,
       "previewDuration": 2.0
     },
     {
-      "id": 3,
-      "name": "Medium Challenge",
-      "pairs": 6,
-      "categories": ["numbers", "dice"],
-      "lives": 4,
-      "previewDuration": 2.5
-    },
-    {
-      "id": 4,
-      "name": "Hard Mode",
+      "id": 7,
+      "name": "Stage 7: 중급 레벨",
       "pairs": 7,
       "categories": ["numbers", "dice"],
+      "lives": 6,
+      "previewDuration": 2
+    },
+    {
+      "id": 8,
+      "name": "Stage 8: 빠른 기억",
+      "pairs": 7,
+      "categories": ["numbers", "dice"],
+      "lives": 6,
+      "previewDuration": 1.0
+    },
+    {
+      "id": 9,
+      "name": "Stage 9: 최대 카드",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 6,
+      "previewDuration": 1.5
+    },
+    {
+      "id": 10,
+      "name": "Stage 10: 반환점",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 6,
+      "previewDuration": 1.3
+    },
+    {
+      "id": 11,
+      "name": "Stage 11: 상급 도전",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 6,
+      "previewDuration": 1.0
+    },
+    {
+      "id": 12,
+      "name": "Stage 12: 순간 기억",
+      "pairs": 7,
+      "categories": ["numbers", "dice"],
+      "lives": 5,
+      "previewDuration": 1.0
+    },
+    {
+      "id": 13,
+      "name": "Stage 13: 고난의 시작",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 5,
+      "previewDuration": 1.0
+    },
+    {
+      "id": 14,
+      "name": "Stage 14: 극한 집중",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 4,
+      "previewDuration": 0.8
+    },
+    {
+      "id": 15,
+      "name": "Stage 15: 마스터 도전",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
       "lives": 3,
-      "previewDuration": 3.0
+      "previewDuration": 0.8
+    },
+    {
+      "id": 16,
+      "name": "Stage 16: 전문가 레벨",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 3,
+      "previewDuration": 0.7
+    },
+    {
+      "id": 17,
+      "name": "Stage 17: 거의 불가능",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 2,
+      "previewDuration": 0.8
+    },
+    {
+      "id": 18,
+      "name": "Stage 18: 천재의 영역",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 2,
+      "previewDuration": 0.5
+    },
+    {
+      "id": 19,
+      "name": "Stage 19: 최종 관문",
+      "pairs": 8,
+      "categories": ["numbers", "dice"],
+      "lives": 1,
+      "previewDuration": 0.5
+    },
+    {
+      "id": 20,
+      "name": "Stage 20: 전설의 챔피언",
+      "pairs": 9,
+      "categories": ["numbers", "dice"],
+      "lives": 1,
+      "previewDuration": 0.5
     }
   ]
 }
