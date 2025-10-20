@@ -36,6 +36,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   bool _isHintRevealing = false;
   double _hintRevealTimer = 0.0;
 
+  // Penalty shuffle state
+  bool _isShuffling = false;
+  double _shuffleTimer = 0.0;
+  final List<Vector2> _targetPositions = [];
+
   double _shufflingTimer = 0.0;
   final double _shufflingDuration = GameConfig.shufflingDuration;
   double _previewTimer = 0.0;
@@ -133,6 +138,34 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _hintRevealTimer += dt;
       if (_hintRevealTimer >= GameConfig.hintRevealDuration) {
         _endHintReveal();
+      }
+    }
+
+    // Update penalty shuffle animation
+    if (_isShuffling) {
+      _shuffleTimer += dt;
+      final progress = (_shuffleTimer / GameConfig.penaltyShuffleDuration).clamp(0.0, 1.0);
+
+      // Update card positions with easing
+      for (int i = 0; i < _cards.length; i++) {
+        if (i < _targetPositions.length) {
+          final startPos = _cards[i].position;
+          final targetPos = _targetPositions[i];
+
+          // Ease in-out cubic
+          final t = progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - pow(-2 * progress + 2, 3) / 2;
+
+          _cards[i].position = Vector2(
+            startPos.x + (targetPos.x - startPos.x) * t,
+            startPos.y + (targetPos.y - startPos.y) * t,
+          );
+        }
+      }
+
+      if (_shuffleTimer >= GameConfig.penaltyShuffleDuration) {
+        _endPenaltyShuffle();
       }
     }
   }
@@ -305,7 +338,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Handle card tap
   void _onCardTapped(PigCard card) {
-    if (!gameState.isGameActive || _isProcessingMatch || _isHintRevealing) return;
+    if (!gameState.isGameActive || _isProcessingMatch || _isHintRevealing || _isShuffling) return;
     if (card.state != CardState.faceDown) return;
 
     // Flip the card to face up
@@ -336,16 +369,38 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _secondSelectedCard!.setMatched();
       gameState.registerMatch();
     } else {
+      // Check if either card has a powerup (penalty shuffle trigger)
+      final hasPowerup = _firstSelectedCard!.hasPowerup || _secondSelectedCard!.hasPowerup;
+
       // No match - play fail animation then flip back
       final firstCard = _firstSelectedCard;
       final secondCard = _secondSelectedCard;
 
-      _firstSelectedCard!.playMatchFailAnimation(onComplete: () {
-        firstCard?.flipToFaceDown();
-      });
-      _secondSelectedCard!.playMatchFailAnimation(onComplete: () {
-        secondCard?.flipToFaceDown();
-      });
+      if (hasPowerup) {
+        // Remove powerups from both cards
+        _firstSelectedCard!.powerupType = PowerupType.none;
+        _secondSelectedCard!.powerupType = PowerupType.none;
+
+        print('[Powerup] Powerup lost! Triggering penalty shuffle...');
+
+        // Play fail animation then trigger penalty shuffle
+        _firstSelectedCard!.playMatchFailAnimation(onComplete: () {
+          firstCard?.flipToFaceDown();
+        });
+        _secondSelectedCard!.playMatchFailAnimation(onComplete: () {
+          secondCard?.flipToFaceDown();
+          // Start penalty shuffle after animations complete
+          _startPenaltyShuffle();
+        });
+      } else {
+        // Normal fail - just shake and flip back
+        _firstSelectedCard!.playMatchFailAnimation(onComplete: () {
+          firstCard?.flipToFaceDown();
+        });
+        _secondSelectedCard!.playMatchFailAnimation(onComplete: () {
+          secondCard?.flipToFaceDown();
+        });
+      }
 
       gameState.loseLife();
 
@@ -427,6 +482,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       print('[Powerup] Hint already active!');
       return;
     }
+    if (_isShuffling) {
+      print('[Powerup] Cannot use hint during shuffle!');
+      return;
+    }
     if (!gameState.isGameActive) {
       print('[Powerup] Cannot use hint when game is not active!');
       return;
@@ -461,6 +520,40 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         card.flipToFaceDown();
       }
     }
+  }
+
+  /// Start penalty shuffle animation (triggered when powerup card match fails)
+  void _startPenaltyShuffle() {
+    _isShuffling = true;
+    _shuffleTimer = 0.0;
+    _targetPositions.clear();
+
+    print('[Penalty] Starting shuffle animation...');
+
+    // Save current positions
+    final currentPositions = _cards.map((card) => card.position.clone()).toList();
+
+    // Create shuffled list of positions
+    final shuffledPositions = List<Vector2>.from(currentPositions);
+    shuffledPositions.shuffle(_random);
+
+    // Store target positions for animation
+    _targetPositions.addAll(shuffledPositions);
+  }
+
+  /// End penalty shuffle animation
+  void _endPenaltyShuffle() {
+    _isShuffling = false;
+    _shuffleTimer = 0.0;
+
+    print('[Penalty] Shuffle animation complete');
+
+    // Ensure cards are at exact target positions
+    for (int i = 0; i < _cards.length && i < _targetPositions.length; i++) {
+      _cards[i].position = _targetPositions[i].clone();
+    }
+
+    _targetPositions.clear();
   }
 
   /// Show game over screen
@@ -534,6 +627,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _hintDisplay.updateHintCount(0);
     _isHintRevealing = false;
     _hintRevealTimer = 0.0;
+
+    // Reset shuffle state
+    _isShuffling = false;
+    _shuffleTimer = 0.0;
+    _targetPositions.clear();
 
     // Reinitialize cards with new stage config
     _initializeCards();

@@ -115,6 +115,9 @@ class GameConfig {
   /// 힌트 사용시 카드 공개 시간 (초)
   static const double hintRevealDuration = 1.0;
 
+  /// 파워업 카드 매칭 실패시 패널티 셔플 시간 (초)
+  static const double penaltyShuffleDuration = 1.5;
+
 
   // ==================== UI 설정 ====================
 
