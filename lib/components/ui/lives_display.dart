@@ -14,7 +14,11 @@ class LivesDisplay extends PositionComponent {
     required int maxLives,
   })  : _maxLives = maxLives,
         _currentLives = maxLives,
-        super(position: position, anchor: Anchor.topRight);
+        super(
+          position: position,
+          anchor: Anchor.topRight,
+          priority: 100, // High priority to render on top of cards
+        );
 
   @override
   Future<void> onLoad() async {

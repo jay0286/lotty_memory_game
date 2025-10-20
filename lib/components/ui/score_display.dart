@@ -11,6 +11,7 @@ class ScoreDisplay extends PositionComponent {
   }) : super(
           position: position,
           anchor: Anchor.topLeft,
+          priority: 100, // High priority to render on top of cards
         ) {
     textPaint = TextPaint(
       style: const TextStyle(
