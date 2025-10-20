@@ -213,8 +213,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
     // Set lives from stage config
     gameState.maxLives = stage.lives;
-    gameState.lives = stage.lives;
-    _livesDisplay.updateLives(stage.lives);
+    gameState.lives = stage.lives; // This triggers onLivesChanged callback
 
     // Start preview after cards are created
     _startPreview();
@@ -265,14 +264,14 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _scoreDisplay = ScoreDisplay(
       position: Vector2(20, 20),
     );
-    add(_scoreDisplay);
+    await add(_scoreDisplay);
 
     // Create lives display (top right)
     _livesDisplay = LivesDisplay(
       position: Vector2(size.x - 20, 20),
-      maxLives: 5,
+      maxLives: 6,
     );
-    add(_livesDisplay);
+    await add(_livesDisplay);
   }
 
 
