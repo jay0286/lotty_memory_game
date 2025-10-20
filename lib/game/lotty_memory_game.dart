@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 import '../utils/asset_manager.dart';
 import '../components/pig_card.dart';
 import '../components/shadow_layer.dart';
-import '../components/ui/score_display.dart';
 import '../components/ui/lives_display.dart';
+import '../components/ui/hint_display.dart';
 import '../components/ui/game_over_overlay.dart';
 import '../config/game_config.dart';
 import 'game_state.dart';
@@ -25,14 +25,25 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   bool _isProcessingMatch = false;
   double _matchCheckTimer = 0.0;
 
+  // Powerup inventory
+  int _hintCount = 0;
+  final Random _random = Random();
+
+  // ValueNotifier for Flutter UI
+  final ValueNotifier<int> hintCountNotifier = ValueNotifier<int>(0);
+
+  // Hint reveal state
+  bool _isHintRevealing = false;
+  double _hintRevealTimer = 0.0;
+
   double _shufflingTimer = 0.0;
   final double _shufflingDuration = GameConfig.shufflingDuration;
   double _previewTimer = 0.0;
   double _previewDuration = 2.0; // Will be set from stage config
 
   // UI components
-  late ScoreDisplay _scoreDisplay;
   late LivesDisplay _livesDisplay;
+  late HintDisplay _hintDisplay;
   GameOverOverlay? _gameOverOverlay;
 
   // Shadow layer
@@ -114,6 +125,14 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         _checkMatch();
         _matchCheckTimer = 0.0;
         _isProcessingMatch = false;
+      }
+    }
+
+    // Update hint reveal timer
+    if (_isHintRevealing) {
+      _hintRevealTimer += dt;
+      if (_hintRevealTimer >= GameConfig.hintRevealDuration) {
+        _endHintReveal();
       }
     }
   }
@@ -207,7 +226,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     gameState = GameStateManager(
       totalPairs: stage.pairs,
       onScoreChanged: () {
-        _scoreDisplay.updateScore(gameState.score);
+        // Score display removed
       },
       onLivesChanged: () {
         _livesDisplay.updateLives(gameState.lives);
@@ -269,11 +288,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Initialize UI components
   Future<void> _initializeUI() async {
-    // Create score display (top left)
-    _scoreDisplay = ScoreDisplay(
+    // Create hint display (top left)
+    _hintDisplay = HintDisplay(
       position: Vector2(20, 20),
     );
-    await add(_scoreDisplay);
+    await add(_hintDisplay);
 
     // Create lives display (top right)
     _livesDisplay = LivesDisplay(
@@ -286,7 +305,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Handle card tap
   void _onCardTapped(PigCard card) {
-    if (!gameState.isGameActive || _isProcessingMatch) return;
+    if (!gameState.isGameActive || _isProcessingMatch || _isHintRevealing) return;
     if (card.state != CardState.faceDown) return;
 
     // Flip the card to face up
@@ -308,6 +327,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (_firstSelectedCard == null || _secondSelectedCard == null) return;
 
     if (_firstSelectedCard!.cardValue == _secondSelectedCard!.cardValue) {
+      // Check if either card has a powerup
+      _collectPowerup(_firstSelectedCard!);
+      _collectPowerup(_secondSelectedCard!);
+
       // Match found! Play success animation (cards will be removed by animation)
       _firstSelectedCard!.setMatched();
       _secondSelectedCard!.setMatched();
@@ -325,11 +348,119 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       });
 
       gameState.loseLife();
+
+      // Spawn powerup on a random card after failed match
+      _spawnPowerupOnRandomCard();
     }
 
     // Reset selection
     _firstSelectedCard = null;
     _secondSelectedCard = null;
+  }
+
+  /// Spawn a powerup on a random face-down card
+  void _spawnPowerupOnRandomCard() {
+    // Get all face-down cards without powerups
+    final eligibleCards = _cards
+        .where((card) =>
+            card.state == CardState.faceDown &&
+            card.powerupType == PowerupType.none)
+        .toList();
+
+    if (eligibleCards.isEmpty) return;
+
+    // Roll for powerup spawn
+    final roll = _random.nextDouble();
+    PowerupType powerupType = PowerupType.none;
+
+    if (roll < GameConfig.hintPowerupChance) {
+      // 5% chance for hint
+      powerupType = PowerupType.hint;
+      print('[Powerup] Hint spawned! (roll: $roll)');
+    } else if (roll < GameConfig.hintPowerupChance + GameConfig.heartPowerupChance) {
+      // 10% chance for heart (total 15% with hint)
+      powerupType = PowerupType.heart;
+      print('[Powerup] Heart spawned! (roll: $roll)');
+    }
+
+    // Assign powerup to random eligible card
+    if (powerupType != PowerupType.none) {
+      final randomCard = eligibleCards[_random.nextInt(eligibleCards.length)];
+      randomCard.powerupType = powerupType;
+      print('[Powerup] Assigned ${powerupType.name} to card with value ${randomCard.cardValue}');
+    }
+  }
+
+  /// Collect powerup from a matched card
+  void _collectPowerup(PigCard card) {
+    if (!card.hasPowerup) return;
+
+    switch (card.powerupType) {
+      case PowerupType.hint:
+        _hintCount++;
+        hintCountNotifier.value = _hintCount;
+        _hintDisplay.updateHintCount(_hintCount);
+        print('[Powerup] Hint collected! Total hints: $_hintCount');
+        break;
+      case PowerupType.heart:
+        // Restore 1 life (up to max)
+        if (gameState.lives < gameState.maxLives) {
+          gameState.lives++;
+          print('[Powerup] Heart collected! Lives restored to: ${gameState.lives}');
+        }
+        break;
+      case PowerupType.none:
+        break;
+    }
+
+    // Clear powerup from card
+    card.powerupType = PowerupType.none;
+  }
+
+  /// Use a hint to reveal all cards for a short duration
+  void useHint() {
+    if (_hintCount <= 0) {
+      print('[Powerup] No hints available!');
+      return;
+    }
+    if (_isHintRevealing) {
+      print('[Powerup] Hint already active!');
+      return;
+    }
+    if (!gameState.isGameActive) {
+      print('[Powerup] Cannot use hint when game is not active!');
+      return;
+    }
+
+    _hintCount--;
+    hintCountNotifier.value = _hintCount;
+    _hintDisplay.updateHintCount(_hintCount);
+    _isHintRevealing = true;
+    _hintRevealTimer = 0.0;
+
+    print('[Powerup] Hint used! Remaining hints: $_hintCount');
+
+    // Flip all face-down cards to face up
+    for (final card in _cards) {
+      if (card.state == CardState.faceDown) {
+        card.flipToFaceUp();
+      }
+    }
+  }
+
+  /// End hint reveal and flip cards back
+  void _endHintReveal() {
+    _isHintRevealing = false;
+    _hintRevealTimer = 0.0;
+
+    print('[Powerup] Hint reveal ended');
+
+    // Flip all non-matched cards back to face down
+    for (final card in _cards) {
+      if (card.state == CardState.faceUp) {
+        card.flipToFaceDown();
+      }
+    }
   }
 
   /// Show game over screen
@@ -397,6 +528,13 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _shufflingTimer = 0.0;
     _previewTimer = 0.0;
 
+    // Reset powerup state
+    _hintCount = 0;
+    hintCountNotifier.value = 0;
+    _hintDisplay.updateHintCount(0);
+    _isHintRevealing = false;
+    _hintRevealTimer = 0.0;
+
     // Reinitialize cards with new stage config
     _initializeCards();
   }
@@ -412,6 +550,12 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         // Restart on 'R' key
         if (gameState.state != GameState.playing) {
           _restartGame();
+        }
+        return KeyEventResult.handled;
+      } else if (event.logicalKey == LogicalKeyboardKey.keyH) {
+        // Use hint on 'H' key
+        if (gameState.state == GameState.playing) {
+          useHint();
         }
         return KeyEventResult.handled;
       }

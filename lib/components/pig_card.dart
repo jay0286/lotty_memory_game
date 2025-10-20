@@ -1,5 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/material.dart' show TextStyle;
+import 'dart:ui' show Canvas;
 import 'dart:math' as math;
 import 'water_ripple.dart';
 import '../config/game_config.dart';
@@ -9,6 +11,13 @@ enum CardState {
   faceDown, // Shows pig tube
   faceUp, // Shows number
   matched, // Card has been matched
+}
+
+/// Powerup type enum
+enum PowerupType {
+  none,
+  hint,  // 💡 Reveals all cards for 1 second
+  heart, // ❤️ Restores 1 life
 }
 
 /// Match animation type
@@ -64,6 +73,10 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
   // Collision detection flag
   bool _collisionEnabled = true;
+
+  // Powerup properties
+  PowerupType powerupType = PowerupType.none;
+  bool get hasPowerup => powerupType != PowerupType.none;
 
   PigCard({
     required this.backSprite,
@@ -387,6 +400,33 @@ class PigCard extends SpriteComponent with TapCallbacks {
     }
   }
 
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    // Render powerup icon if card has one and is face down
+    if (hasPowerup && _state == CardState.faceDown) {
+      _renderPowerupIcon(canvas);
+    }
+  }
+
+  /// Render powerup icon on the card
+  void _renderPowerupIcon(Canvas canvas) {
+    final iconSize = size.x * 0.3;
+    final textPaint = TextPaint(
+      style: TextStyle(
+        fontSize: iconSize,
+      ),
+    );
+
+    final icon = powerupType == PowerupType.hint ? '💡' : '❤️';
+    textPaint.render(
+      canvas,
+      icon,
+      Vector2(iconSize, -iconSize),
+    );
+  }
+
   /// Reset card to initial state
   void reset() {
     _state = CardState.faceDown;
@@ -394,5 +434,6 @@ class PigCard extends SpriteComponent with TapCallbacks {
     _isFlipping = false;
     sprite = backSprite;
     scale = Vector2.all(1.0);
+    powerupType = PowerupType.none; // Clear powerup
   }
 }
