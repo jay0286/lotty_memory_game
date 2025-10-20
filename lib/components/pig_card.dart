@@ -31,6 +31,7 @@ class PigCard extends SpriteComponent with TapCallbacks {
   CardState _state = CardState.faceDown;
   CardState get state => _state;
   bool get isCollisionEnabled => _collisionEnabled;
+  bool get isPlayingMatchAnimation => _isPlayingMatchAnimation;
 
   // Animation properties
   double _flipProgress = 0.0; // 0.0 = face down, 1.0 = face up

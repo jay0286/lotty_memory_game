@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utils/asset_manager.dart';
 import '../components/pig_card.dart';
+import '../components/shadow_layer.dart';
 import '../components/ui/score_display.dart';
 import '../components/ui/lives_display.dart';
 import '../components/ui/game_over_overlay.dart';
@@ -34,6 +35,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   late LivesDisplay _livesDisplay;
   GameOverOverlay? _gameOverOverlay;
 
+  // Shadow layer
+  late ShadowLayer _shadowLayer;
+
   @override
   Color backgroundColor() => const Color(0xFF87CEEB); // Sky blue background
 
@@ -50,6 +54,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
     // Load and add background
     await _loadBackground();
+
+    // Initialize shadow layer (low priority, renders first)
+    _shadowLayer = ShadowLayer(cards: _cards);
+    add(_shadowLayer);
 
     // Initialize UI first
     await _initializeUI();
@@ -190,6 +198,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         size: Vector2(cardSize, cardSize),
         onTap: _onCardTapped,
       );
+      card.priority = 10; // Higher priority than shadow layer
       _cards.add(card);
       add(card);
     }

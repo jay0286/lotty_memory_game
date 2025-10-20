@@ -21,6 +21,30 @@ class GameConfig {
   static const double cardBounceFactor = 0.8;
 
 
+  // ==================== 카드 그림자 설정 ====================
+
+  /// 그림자 표시 여부
+  static const bool shadowEnabled = true;
+
+  /// 그림자 Y 오프셋 (카드 아래 거리, 픽셀)
+  static const double shadowOffsetY = 40.0;
+
+  /// 그림자 X 오프셋 (카드 아래 거리, 픽셀)
+  static const double shadowOffsetX = 40.0;
+
+  /// 그림자 너비 배수 (카드 너비 기준)
+  static const double shadowWidthMultiplier = 1;
+
+  /// 그림자 높이 배수 (카드 높이 기준)
+  static const double shadowHeightMultiplier = 1;
+
+  /// 그림자 투명도 (0.0~1.0)
+  static const double shadowOpacity = 0.15;
+
+  /// 그림자 색상
+  static const Color shadowColor = Color.fromARGB(255, 30, 28, 28); // 검은색
+
+
   // ==================== 물결 애니메이션 설정 ====================
 
   /// 물결 생성 간격 (초)
