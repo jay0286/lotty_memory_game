@@ -5,6 +5,10 @@ import 'game/stage_config.dart';
 import 'components/ui/start_dialog.dart';
 import 'components/ui/game_over_dialog.dart';
 import 'components/ui/stage_clear_dialog.dart';
+import 'components/ui/lives_count_widget.dart';
+import 'components/ui/hint_count_widget.dart';
+import 'components/ui/stage_info_widget.dart';
+import 'components/ui/timer_widget.dart';
 
 void main() {
   runApp(const GameApp());
@@ -17,6 +21,7 @@ class GameApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lotty Memory Game',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -76,7 +81,8 @@ class _GameScreenState extends State<GameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => GameOverDialog(
-        currentStage: StageManager.instance.currentStageNumber,
+        currentStage: game.maxStageReached,
+        elapsedTime: game.elapsedTime,
         onRetry: () {
           // Restart the game
           game.restartGame();
@@ -91,6 +97,7 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => StageClearDialog(
         currentStage: StageManager.instance.currentStageNumber,
+        elapsedTime: game.elapsedTime,
         onNext: () {
           // Go to next stage
           game.goToNextStage();
@@ -105,6 +112,43 @@ class _GameScreenState extends State<GameScreen> {
       body: Stack(
         children: [
           GameWidget(game: game),
+
+          // Stage number and Stage name display at top left
+          Positioned(
+            top: 10,
+            left: 20,
+            child: ValueListenableBuilder<Map<String, dynamic>>(
+              valueListenable: game.stageInfoNotifier,
+              builder: (context, stageInfo, child) {
+                return StageInfoWidget(
+                  stageNumber: stageInfo['number'] as int,
+                  stageName: stageInfo['name'] as String,
+                );
+              },
+            ),
+          ),
+          // Timer, Hints and Lives display at top right
+          Positioned(
+            top: 20,
+            right: 20,
+            child: Row(
+              children: [
+                HintCountWidget(hintNotifier: game.hintCountNotifier),
+                const SizedBox(width: 10),
+                LivesCountWidget(livesNotifier: game.livesCountNotifier),
+              ],
+            ),
+          ),
+
+          // Timer, Hints and Lives display at top right
+          Positioned(
+            top: 96,
+                left: 0,
+                right: 0,
+            child: Center(
+              child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
+            ),
+          ),
           // Hint button at bottom center (always show, but disable when hints = 0)
           ValueListenableBuilder<int>(
             valueListenable: game.hintCountNotifier,
@@ -121,7 +165,7 @@ class _GameScreenState extends State<GameScreen> {
               final bool canUseHint = hasHints && isGameActive;
 
               return Positioned(
-                bottom: 120,
+                bottom: 56,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -136,14 +180,14 @@ class _GameScreenState extends State<GameScreen> {
                             shape: BoxShape.rectangle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
+                                color: Colors.black.withValues(alpha: 0.4),
                                 blurRadius: 9,
                                 offset: const Offset(9, 9),
                               ),
                             ],
                           ),
                           child: Image.asset(
-                            'assets/images/hint_small.png',
+                            'assets/images/hint_wide.png',
                             fit: BoxFit.contain,
                           ),
                         ),

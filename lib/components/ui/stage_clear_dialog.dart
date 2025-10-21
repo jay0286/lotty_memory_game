@@ -4,12 +4,20 @@ import 'package:flutter/material.dart';
 class StageClearDialog extends StatelessWidget {
   final VoidCallback onNext;
   final int currentStage;
+  final Duration elapsedTime;
 
   const StageClearDialog({
     super.key,
     required this.onNext,
     required this.currentStage,
+    required this.elapsedTime,
   });
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +70,7 @@ class StageClearDialog extends StatelessWidget {
                           'Stage Clear!',
                           style: TextStyle(
                             fontFamily: 'TJJoyofsinging',
-                            fontSize: 32,
+                            fontSize: 28,
                             fontWeight: FontWeight.w900,
                             color: Color(0xff300313),
                           ),
@@ -75,13 +83,27 @@ class StageClearDialog extends StatelessWidget {
                           'Stage $currentStage 완료',
                           style: const TextStyle(
                             fontFamily: 'TJJoyofsinging',
-                            fontSize: 24,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: Color(0xff300313),
                           ),
                         ),
 
-                        const SizedBox(height: 42),
+                        const SizedBox(height: 12),
+
+                        // 경과 시간
+                        const SizedBox(width: 6),
+                                                    Text(
+                         _formatDuration(elapsedTime),
+                         style: TextStyle(
+                           fontFamily: 'TJJoyofsinging',
+                           fontSize: 20,
+                           fontWeight: FontWeight.w700,
+                           color: const Color(0xff300313).withValues(alpha: 0.7),
+                         ),
+                                                    ),
+
+                        const SizedBox(height: 48),
                       ],
                     ),
                   ),
@@ -101,14 +123,14 @@ class StageClearDialog extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
-                  vertical: 14,
+                  vertical: 20,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF4D8B),
                   borderRadius: BorderRadius.circular(36),
                   border: Border.all(
                     color: Colors.white,
-                    width: 7,
+                    width: 6,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -122,8 +144,8 @@ class StageClearDialog extends StatelessWidget {
                   '다음 스테이지',
                   style: TextStyle(
                     fontFamily: 'TJJoyofsinging',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),

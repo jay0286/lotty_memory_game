@@ -4,12 +4,20 @@ import 'package:flutter/material.dart';
 class GameOverDialog extends StatelessWidget {
   final VoidCallback onRetry;
   final int currentStage;
+  final Duration elapsedTime;
 
   const GameOverDialog({
     super.key,
     required this.onRetry,
     required this.currentStage,
+    required this.elapsedTime,
   });
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,15 +74,30 @@ class GameOverDialog extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(top: 110),
                             child: Center(
-                              child: Text(
-                              'Stage $currentStage',
-                              style: const TextStyle(
-                                fontFamily: 'TJJoyofsinging',
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Stage $currentStage',
+                                    style: const TextStyle(
+                                      fontFamily: 'TJJoyofsinging',
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _formatDuration(elapsedTime),
+                                    style: const TextStyle(
+                                      fontFamily: 'TJJoyofsinging',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
-                                                      ),
                             ),
                           ),
                         ],

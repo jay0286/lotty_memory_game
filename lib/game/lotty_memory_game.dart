@@ -8,8 +8,6 @@ import 'package:flutter/services.dart';
 import '../utils/asset_manager.dart';
 import '../components/pig_card.dart';
 import '../components/shadow_layer.dart';
-import '../components/ui/lives_display.dart';
-import '../components/ui/hint_display.dart';
 import '../config/game_config.dart';
 import 'game_state.dart';
 import 'stage_config.dart';
@@ -30,8 +28,19 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   int _currentLives = 0;
   int _currentHints = 0;
 
-  // ValueNotifier for Flutter UI (deprecated - using GameStateManager now)
+  // ValueNotifiers for Flutter UI
   final ValueNotifier<int> hintCountNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> livesCountNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<Map<String, dynamic>> stageInfoNotifier = ValueNotifier<Map<String, dynamic>>({
+    'number': 1,
+    'name': '',
+  });
+  final ValueNotifier<Duration> elapsedTimeNotifier = ValueNotifier<Duration>(Duration.zero);
+
+  // Game timer
+  final Stopwatch _gameStopwatch = Stopwatch();
+  int _maxStageReached = 0;
+  double _timerUpdateAccumulator = 0.0;
 
   // Game ready state
   bool _isGameReady = false;
@@ -53,10 +62,6 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   final double _shufflingDuration = GameConfig.shufflingDuration;
   double _previewTimer = 0.0;
   double _previewDuration = 2.0; // Will be set from stage config
-
-  // UI components
-  late LivesDisplay _livesDisplay;
-  late HintDisplay _hintDisplay;
 
   // Shadow layer
   late ShadowLayer _shadowLayer;
@@ -93,9 +98,26 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   /// Start the game (called from StartDialog)
   void startFirstStage() {
     if (_isGameReady && _cards.isEmpty) {
+      _gameStopwatch.start();
       _initializeCards();
     }
   }
+
+  /// Pause the timer
+  void pauseTimer() {
+    _gameStopwatch.stop();
+  }
+
+  /// Resume the timer
+  void resumeTimer() {
+    _gameStopwatch.start();
+  }
+
+  /// Get elapsed time
+  Duration get elapsedTime => _gameStopwatch.elapsed;
+
+  /// Get max stage reached
+  int get maxStageReached => _maxStageReached;
 
   @override
   void update(double dt) {
@@ -103,6 +125,15 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
     // Don't update if game hasn't started yet
     if (_cards.isEmpty) return;
+
+    // Update elapsed time notifier (throttled to ~0.1 seconds to avoid build errors)
+    if (_gameStopwatch.isRunning) {
+      _timerUpdateAccumulator += dt;
+      if (_timerUpdateAccumulator >= 0.1) {
+        elapsedTimeNotifier.value = _gameStopwatch.elapsed;
+        _timerUpdateAccumulator = 0.0;
+      }
+    }
 
     if (gameState.state == GameState.shuffling) {
       _shufflingTimer += dt;
@@ -191,6 +222,18 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   Future<void> _initializeCards() async {
     final stage = StageManager.instance.currentStage;
     final random = Random();
+
+    // Update max stage reached
+    final currentStageNum = StageManager.instance.currentStageNumber;
+    if (currentStageNum > _maxStageReached) {
+      _maxStageReached = currentStageNum;
+    }
+
+    // Update stage info notifier
+    stageInfoNotifier.value = {
+      'number': currentStageNum,
+      'name': stage.name,
+    };
 
     // Set preview duration from stage config
     _previewDuration = stage.previewDuration;
@@ -292,10 +335,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     gameState = GameStateManager(
       totalPairs: stage.pairs,
       onLivesChanged: () {
-        _livesDisplay.updateLives(gameState.lives);
+        livesCountNotifier.value = gameState.lives;
       },
       onHintsChanged: () {
-        _hintDisplay.updateHintCount(gameState.hints);
         hintCountNotifier.value = gameState.hints;
       },
       onStateChanged: () {
@@ -371,18 +413,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Initialize UI components
   Future<void> _initializeUI() async {
-    // Create hint display (top left)
-    _hintDisplay = HintDisplay(
-      position: Vector2(20, 20),
-    );
-    await add(_hintDisplay);
-
-    // Create lives display (top right)
-    _livesDisplay = LivesDisplay(
-      position: Vector2(size.x - 20, 20),
-      maxLives: 6,
-    );
-    await add(_livesDisplay);
+    // UI components moved to Flutter OSD (see main.dart)
+    // Lives and hints are now displayed using ValueListenableBuilder
   }
 
 
@@ -604,6 +636,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Show game over screen or stage clear screen
   void _showGameOverScreen(bool isWin) {
+    // Pause timer when dialog shows
+    pauseTimer();
+
     if (isWin) {
       // Show stage clear dialog
       onShowStageClearDialog?.call();
@@ -615,15 +650,26 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Restart the game (after game over)
   void restartGame() {
+    // Reset timer
+    _gameStopwatch.reset();
+    _maxStageReached = 0;
+    elapsedTimeNotifier.value = Duration.zero;
+
     // Reset to first stage and clear persistent values
     StageManager.instance.reset();
     _currentLives = 0;
     _currentHints = 0;
+
+    // Resume timer
+    resumeTimer();
     _loadNextStage();
   }
 
   /// Go to next stage (after stage clear)
   void goToNextStage() {
+    // Resume timer for next stage
+    resumeTimer();
+
     // Advance to next stage
     if (StageManager.instance.hasNextStage) {
       StageManager.instance.nextStage();
