@@ -76,6 +76,7 @@ class _GameScreenState extends State<GameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => GameOverDialog(
+        currentStage: StageManager.instance.currentStageNumber,
         onRetry: () {
           // Restart the game
           game.restartGame();
