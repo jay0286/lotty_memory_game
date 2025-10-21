@@ -36,14 +36,26 @@ class _GameOverDialogState extends State<GameOverDialog> {
   }
 
   Future<void> _handleRetry() async {
-    if (widget.onSaveRanking != null && _nameController.text.trim().isNotEmpty) {
+    debugPrint('=== GameOverDialog: _handleRetry called ===');
+
+    if (widget.onSaveRanking != null) {
+      final playerName = _nameController.text.trim().isEmpty
+          ? 'Unknown'
+          : _nameController.text.trim();
+
+      debugPrint('Saving ranking with name: $playerName');
       setState(() => _isSaving = true);
+
       try {
-        await widget.onSaveRanking!(_nameController.text.trim());
+        await widget.onSaveRanking!(playerName);
+        debugPrint('Ranking save completed successfully');
       } catch (e) {
         debugPrint('Failed to save ranking: $e');
       }
+
       setState(() => _isSaving = false);
+    } else {
+      debugPrint('onSaveRanking callback is null!');
     }
 
     if (mounted) {

@@ -75,9 +75,7 @@ class StageClearDialog extends StatelessWidget {
                             color: Color(0xff300313),
                           ),
                         ),
-
                         const SizedBox(height: 16),
-
                         // 현재 스테이지 번호
                         Text(
                           'Stage $currentStage 완료',
@@ -88,12 +86,10 @@ class StageClearDialog extends StatelessWidget {
                             color: Color(0xff300313),
                           ),
                         ),
-
                         const SizedBox(height: 12),
-
                         // 경과 시간
                         const SizedBox(width: 6),
-                                                    Text(
+                        Text(
                          _formatDuration(elapsedTime),
                          style: TextStyle(
                            fontFamily: 'TJJoyofsinging',

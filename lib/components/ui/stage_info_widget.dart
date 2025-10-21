@@ -24,11 +24,11 @@ class StageInfoWidget extends StatelessWidget {
         children: [
           Text(
             '스테이지 $stageNumber',
-            style: const TextStyle(
+            style:  TextStyle(
               fontFamily: 'TJJoyofsinging',
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 2),
@@ -36,9 +36,9 @@ class StageInfoWidget extends StatelessWidget {
             ': $stageName',
             style: TextStyle(
               fontFamily: 'TJJoyofsinging',
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              color:  Colors.white,
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
         ],

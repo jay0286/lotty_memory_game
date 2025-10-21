@@ -92,6 +92,10 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showGameOverDialog() {
+    debugPrint('=== Main: Showing game over dialog ===');
+    debugPrint('Stage reached: ${game.maxStageReached}');
+    debugPrint('Elapsed time: ${game.elapsedTime}');
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -99,6 +103,7 @@ class _GameScreenState extends State<GameScreen> {
         currentStage: game.maxStageReached,
         elapsedTime: game.elapsedTime,
         onSaveRanking: (playerName) async {
+          debugPrint('=== Main: onSaveRanking callback triggered ===');
           await RankingService.instance.saveRanking(
             playerName: playerName,
             stage: game.maxStageReached,
@@ -107,6 +112,7 @@ class _GameScreenState extends State<GameScreen> {
         },
         onRetry: () {
           // Restart the game
+          debugPrint('=== Main: Restarting game ===');
           game.restartGame();
         },
       ),

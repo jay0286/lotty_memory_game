@@ -2,52 +2,52 @@
   "stages": [
     {
       "id": 1,
-      "name": "Stage 1: 물고기 친구들",
+      "name": "물고기 친구들",
       "pairs": 2,
       "categories": ["fish"],
       "lives": 3,
-      "hints": 0,
-      "previewDuration": 4.0
+      "hints": 1,
+      "previewDuration": 3.0
     },
     {
       "id": 2,
-      "name": "Stage 2: 조개 찾기",
+      "name": "조개 찾기",
       "pairs": 2,
       "categories": ["shells"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 2.0
     },
     {
       "id": 3,
-      "name": "Stage 3: 과일 바구니",
+      "name": "과일 바구니",
       "pairs": 2,
       "categories": ["fruits"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 3.5
+      "previewDuration": 2
     },
     {
       "id": 4,
-      "name": "Stage 4: 숫자 매칭",
+      "name": "숫자 매칭",
       "pairs": 3,
       "categories": ["numbers"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 3.5
+      "previewDuration": 1.5
     },
     {
       "id": 5,
-      "name": "Stage 5: 주사위 게임",
+      "name": "주사위 게임",
       "pairs": 3,
       "categories": ["dice"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 3.5
+      "previewDuration": 3
     },
     {
       "id": 6,
-      "name": "Stage 6: 디저트 타임",
+      "name": "디저트 타임",
       "pairs": 3,
       "categories": ["desserts"],
       "lives": 4,
@@ -56,7 +56,7 @@
     },
     {
       "id": 7,
-      "name": "Stage 7: 비치볼 놀이",
+      "name": "비치볼 놀이",
       "pairs": 4,
       "categories": ["beachballs"],
       "lives": 4,
@@ -65,7 +65,7 @@
     },
     {
       "id": 8,
-      "name": "Stage 8: 숫자와 주사위",
+      "name": "숫자와 주사위",
       "pairs": 4,
       "categories": ["numbers", "dice"],
       "lives": 4,
@@ -74,7 +74,7 @@
     },
     {
       "id": 9,
-      "name": "Stage 9: 모양 찾기",
+      "name": "모양 찾기",
       "pairs": 4,
       "categories": ["shapes"],
       "lives": 4,
@@ -83,7 +83,7 @@
     },
     {
       "id": 10,
-      "name": "Stage 10: 해양 생물",
+      "name": "해양 생물",
       "pairs": 5,
       "categories": ["sealife"],
       "lives": 4,
@@ -92,7 +92,7 @@
     },
     {
       "id": 11,
-      "name": "Stage 11: 비치 용품",
+      "name": "비치 용품",
       "pairs": 5,
       "categories": ["beachgear"],
       "lives": 4,
@@ -101,7 +101,7 @@
     },
     {
       "id": 12,
-      "name": "Stage 12: 도형과 조개",
+      "name": "도형과 조개",
       "pairs": 5,
       "categories": ["shapes", "shells"],
       "lives": 4,
@@ -110,7 +110,7 @@
     },
     {
       "id": 13,
-      "name": "Stage 13: 과일과 디저트",
+      "name": "과일과 디저트",
       "pairs": 5,
       "categories": ["fruits", "desserts"],
       "lives": 4,
@@ -119,7 +119,7 @@
     },
     {
       "id": 14,
-      "name": "Stage 14: 물고기와 해양생물",
+      "name": "물고기와 해양생물",
       "pairs": 6,
       "categories": ["fish", "sealife"],
       "lives": 4,
@@ -128,7 +128,7 @@
     },
     {
       "id": 15,
-      "name": "Stage 15: 숫자 마스터",
+      "name": "숫자 마스터",
       "pairs": 6,
       "categories": ["numbers", "dice"],
       "lives": 4,
@@ -137,7 +137,7 @@
     },
     {
       "id": 16,
-      "name": "Stage 16: 비치 파티",
+      "name": "비치 파티",
       "pairs": 6,
       "categories": ["beachballs", "beachgear"],
       "lives": 5,
@@ -146,7 +146,7 @@
     },
     {
       "id": 17,
-      "name": "Stage 17: 모양의 세계",
+      "name": "모양의 세계",
       "pairs": 7,
       "categories": ["shapes", "beachballs"],
       "lives": 5,
@@ -155,7 +155,7 @@
     },
     {
       "id": 18,
-      "name": "Stage 18: 바다 탐험",
+      "name": "바다 탐험",
       "pairs": 7,
       "categories": ["shells", "fish", "sealife"],
       "lives": 5,
@@ -164,7 +164,7 @@
     },
     {
       "id": 19,
-      "name": "Stage 19: 달콤한 도전",
+      "name": "달콤한 도전",
       "pairs": 7,
       "categories": ["fruits", "desserts"],
       "lives": 5,
@@ -173,7 +173,7 @@
     },
     {
       "id": 20,
-      "name": "Stage 20: 숫자 전설",
+      "name": "숫자 전설",
       "pairs": 8,
       "categories": ["numbers", "dice"],
       "lives": 5,
@@ -182,7 +182,7 @@
     },
     {
       "id": 21,
-      "name": "Stage 21: 해변의 추억",
+      "name": "해변의 추억",
       "pairs": 8,
       "categories": ["beachballs", "beachgear", "shells"],
       "lives": 5,
@@ -191,7 +191,7 @@
     },
     {
       "id": 22,
-      "name": "Stage 22: 수중 세계",
+      "name": "수중 세계",
       "pairs": 8,
       "categories": ["fish", "sealife"],
       "lives": 5,
@@ -200,7 +200,7 @@
     },
     {
       "id": 23,
-      "name": "Stage 23: 과일 파티",
+      "name": "과일 파티",
       "pairs": 9,
       "categories": ["fruits"],
       "lives": 5,
@@ -209,7 +209,7 @@
     },
     {
       "id": 24,
-      "name": "Stage 24: 디저트 천국",
+      "name": "디저트 천국",
       "pairs": 9,
       "categories": ["desserts"],
       "lives": 5,
@@ -218,7 +218,7 @@
     },
     {
       "id": 25,
-      "name": "Stage 25: 도형 예술",
+      "name": "도형 예술",
       "pairs": 9,
       "categories": ["shapes"],
       "lives": 5,
@@ -227,7 +227,7 @@
     },
     {
       "id": 26,
-      "name": "Stage 26: 조개 컬렉션",
+      "name": "조개 컬렉션",
       "pairs": 9,
       "categories": ["shells"],
       "lives": 5,
@@ -236,7 +236,7 @@
     },
     {
       "id": 27,
-      "name": "Stage 27: 비치볼 축제",
+      "name": "비치볼 축제",
       "pairs": 9,
       "categories": ["beachballs"],
       "lives": 5,
@@ -245,7 +245,7 @@
     },
     {
       "id": 28,
-      "name": "Stage 28: 물고기 왕국",
+      "name": "물고기 왕국",
       "pairs": 9,
       "categories": ["fish"],
       "lives": 5,
@@ -254,7 +254,7 @@
     },
     {
       "id": 29,
-      "name": "Stage 29: 해양 제국",
+      "name": "해양 제국",
       "pairs": 9,
       "categories": ["sealife"],
       "lives": 5,
@@ -263,7 +263,7 @@
     },
     {
       "id": 30,
-      "name": "Stage 30: 궁극의 챔피언",
+      "name": "궁극의 챔피언",
       "pairs": 9,
       "categories": ["numbers", "dice"],
       "lives": 5,

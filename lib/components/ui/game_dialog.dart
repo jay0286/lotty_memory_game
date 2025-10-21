@@ -146,8 +146,8 @@ class GameDialog extends StatelessWidget {
                     buttonText!,
                     style: const TextStyle(
                       fontFamily: 'TJJoyofsinging',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
                       color: Colors.white,
                     ),
                   ),

@@ -64,7 +64,14 @@ class RankingService {
     required Duration elapsedTime,
   }) async {
     try {
+      debugPrint('=== Saving ranking ===');
+      debugPrint('Player: $playerName');
+      debugPrint('Stage: $stage');
+      debugPrint('Time: ${elapsedTime.inSeconds}s');
+
       final score = calculateScore(stage, elapsedTime);
+      debugPrint('Score: $score');
+
       final entry = RankingEntry(
         id: '',
         playerName: playerName,
@@ -74,9 +81,14 @@ class RankingService {
         timestamp: DateTime.now(),
       );
 
-      await _firestore.collection(_collectionName).add(entry.toFirestore());
-    } catch (e) {
+      final data = entry.toFirestore();
+      debugPrint('Data to save: $data');
+
+      final docRef = await _firestore.collection(_collectionName).add(data);
+      debugPrint('Ranking saved successfully! Doc ID: ${docRef.id}');
+    } catch (e, stackTrace) {
       debugPrint('Error saving ranking: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     }
   }
