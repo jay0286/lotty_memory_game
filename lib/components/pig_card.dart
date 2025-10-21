@@ -1,7 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/material.dart' show TextStyle;
-import 'dart:ui' show Canvas;
+import 'dart:ui' show Canvas, Color, ImageFilter, Paint;
 import 'dart:math' as math;
 import 'water_ripple.dart';
 import '../config/game_config.dart';
@@ -78,6 +77,14 @@ class PigCard extends SpriteComponent with TapCallbacks {
   PowerupType powerupType = PowerupType.none;
   bool get hasPowerup => powerupType != PowerupType.none;
 
+  static Sprite? _hintIconSprite;
+  static Sprite? _heartIconSprite;
+  static Future<void>? _iconLoadFuture;
+  static const double _powerupPulseSpeed = 5.0;
+  static const double _powerupPulseAmplitude = 0.08;
+  static const double _powerupPulseSquish = 0.01;
+  double _powerupAnimTime = 0.0;
+
   PigCard({
     required this.backSprite,
     required this.frontSprite,
@@ -105,6 +112,19 @@ class PigCard extends SpriteComponent with TapCallbacks {
       math.cos(angle) * floatSpeed,
       math.sin(angle) * floatSpeed,
     );
+  }
+
+  static Future<void> _ensurePowerupIconsLoaded() {
+    return _iconLoadFuture ??= () async {
+      _hintIconSprite ??= await Sprite.load('hint_item.png');
+      _heartIconSprite ??= await Sprite.load('heart_item.png');
+    }();
+  }
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    await _ensurePowerupIconsLoaded();
   }
 
   @override
@@ -177,6 +197,12 @@ class PigCard extends SpriteComponent with TapCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
+
+    if (hasPowerup && _state == CardState.faceDown) {
+      _powerupAnimTime += dt;
+    } else if (_powerupAnimTime != 0.0) {
+      _powerupAnimTime = 0.0;
+    }
 
     // Update match success animation
     if (_isPlayingMatchAnimation) {
@@ -412,18 +438,42 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
   /// Render powerup icon on the card
   void _renderPowerupIcon(Canvas canvas) {
-    final iconSize = size.x * 0.3;
-    final textPaint = TextPaint(
-      style: TextStyle(
-        fontSize: iconSize,
-      ),
-    );
+    final sprite = switch (powerupType) {
+      PowerupType.hint => _hintIconSprite,
+      PowerupType.heart => _heartIconSprite,
+      _ => null,
+    };
 
-    final icon = powerupType == PowerupType.hint ? '💡' : '❤️';
-    textPaint.render(
+    if (sprite == null) {
+      return;
+    }
+
+    final baseSize = size.x * 0.5;
+    final pulse = math.sin(_powerupAnimTime * _powerupPulseSpeed);
+    final scaleX = 1 + pulse * _powerupPulseAmplitude;
+    final scaleY = 1 - pulse * _powerupPulseSquish;
+    final width = baseSize * scaleX;
+    final height = baseSize * 0.65 * scaleY;
+    final position = Vector2(baseSize, -baseSize * 0.45);
+
+    // final shadowPaint = Paint()
+    //   ..color = const Color(0x55000000)
+    //   ..imageFilter = ImageFilter.blur(sigmaX: 4, sigmaY: 4);
+    // final shadowOffset = Vector2(width * 0.06, height * 0.08);
+
+    // sprite.render(
+    //   canvas,
+    //   position: position + shadowOffset,
+    //   size: Vector2(width, height),
+    //   anchor: Anchor.center,
+    //   overridePaint: shadowPaint,
+    // );
+
+    sprite.render(
       canvas,
-      icon,
-      Vector2(iconSize, -iconSize),
+      position: position,
+      size: Vector2(width, height),
+      anchor: Anchor.center,
     );
   }
 
@@ -435,5 +485,6 @@ class PigCard extends SpriteComponent with TapCallbacks {
     sprite = backSprite;
     scale = Vector2.all(1.0);
     powerupType = PowerupType.none; // Clear powerup
+    _powerupAnimTime = 0.0;
   }
 }
