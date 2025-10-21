@@ -2,261 +2,261 @@
   "stages": [
     {
       "id": 1,
-      "name": "Stage 1: 워밍업",
+      "name": "Stage 1: 물고기 친구들",
       "pairs": 2,
-      "categories": ["numbers"],
+      "categories": ["fish"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 3.0
+      "previewDuration": 4.0
     },
     {
       "id": 2,
-      "name": "Stage 2: 쉬운 시작",
+      "name": "Stage 2: 조개 찾기",
       "pairs": 2,
-      "categories": ["numbers", "dice"],
+      "categories": ["shells"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 2.0
+      "previewDuration": 4.0
     },
     {
       "id": 3,
-      "name": "Stage 3: 조금 더",
+      "name": "Stage 3: 과일 바구니",
       "pairs": 2,
-      "categories": ["numbers", "dice"],
+      "categories": ["fruits"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 3.0
+      "previewDuration": 3.5
     },
     {
       "id": 4,
-      "name": "Stage 4: 속도 향상",
+      "name": "Stage 4: 숫자 매칭",
       "pairs": 3,
-      "categories": ["numbers", "dice"],
+      "categories": ["numbers"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 2.0
+      "previewDuration": 3.5
     },
     {
       "id": 5,
-      "name": "Stage 5: 도전 시작",
+      "name": "Stage 5: 주사위 게임",
       "pairs": 3,
-      "categories": ["numbers", "dice"],
+      "categories": ["dice"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 3.5
     },
     {
       "id": 6,
-      "name": "Stage 6: 집중력 테스트",
+      "name": "Stage 6: 디저트 타임",
       "pairs": 3,
-      "categories": ["numbers", "dice"],
+      "categories": ["desserts"],
       "lives": 4,
       "hints": 1,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 7,
-      "name": "Stage 7: 중급 레벨",
+      "name": "Stage 7: 비치볼 놀이",
       "pairs": 4,
-      "categories": ["numbers", "dice"],
+      "categories": ["beachballs"],
       "lives": 4,
       "hints": 1,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 8,
-      "name": "Stage 8: 빠른 기억",
+      "name": "Stage 8: 숫자와 주사위",
       "pairs": 4,
       "categories": ["numbers", "dice"],
       "lives": 4,
       "hints": 1,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 9,
-      "name": "Stage 9: 최대 카드",
+      "name": "Stage 9: 모양 찾기",
       "pairs": 4,
-      "categories": ["numbers", "dice"],
+      "categories": ["shapes"],
       "lives": 4,
       "hints": 1,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 10,
-      "name": "Stage 10: 반환점",
+      "name": "Stage 10: 해양 생물",
       "pairs": 5,
-      "categories": ["numbers", "dice"],
+      "categories": ["sealife"],
       "lives": 4,
       "hints": 1,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 11,
-      "name": "Stage 11: 상급 도전",
+      "name": "Stage 11: 비치 용품",
       "pairs": 5,
-      "categories": ["numbers", "dice"],
+      "categories": ["beachgear"],
       "lives": 4,
       "hints": 2,
-      "previewDuration": 3.0
+      "previewDuration": 2.5
     },
     {
       "id": 12,
-      "name": "Stage 12: 순간 기억",
+      "name": "Stage 12: 도형과 조개",
       "pairs": 5,
-      "categories": ["numbers", "dice"],
+      "categories": ["shapes", "shells"],
       "lives": 4,
       "hints": 2,
-      "previewDuration": 3.0
+      "previewDuration": 2.5
     },
     {
       "id": 13,
-      "name": "Stage 13: 고난의 시작",
+      "name": "Stage 13: 과일과 디저트",
       "pairs": 5,
-      "categories": ["numbers", "dice"],
+      "categories": ["fruits", "desserts"],
       "lives": 4,
       "hints": 2,
-      "previewDuration": 3.0
+      "previewDuration": 2.5
     },
     {
       "id": 14,
-      "name": "Stage 14: 극한 집중",
+      "name": "Stage 14: 물고기와 해양생물",
       "pairs": 6,
-      "categories": ["numbers", "dice"],
+      "categories": ["fish", "sealife"],
       "lives": 4,
       "hints": 2,
-      "previewDuration": 3.0
+      "previewDuration": 2.5
     },
     {
       "id": 15,
-      "name": "Stage 15: 마스터 도전",
+      "name": "Stage 15: 숫자 마스터",
       "pairs": 6,
       "categories": ["numbers", "dice"],
       "lives": 4,
       "hints": 2,
-      "previewDuration": 3.0
+      "previewDuration": 2.0
     },
     {
       "id": 16,
-      "name": "Stage 16: 전문가 레벨",
+      "name": "Stage 16: 비치 파티",
       "pairs": 6,
-      "categories": ["numbers", "dice"],
+      "categories": ["beachballs", "beachgear"],
       "lives": 5,
       "hints": 2,
       "previewDuration": 2.0
     },
     {
       "id": 17,
-      "name": "Stage 17: 거의 불가능",
+      "name": "Stage 17: 모양의 세계",
       "pairs": 7,
-      "categories": ["numbers", "dice"],
+      "categories": ["shapes", "beachballs"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 2.0
     },
     {
       "id": 18,
-      "name": "Stage 18: 천재의 영역",
+      "name": "Stage 18: 바다 탐험",
       "pairs": 7,
-      "categories": ["numbers", "dice"],
+      "categories": ["shells", "fish", "sealife"],
       "lives": 5,
       "hints": 2,
       "previewDuration": 2.0
     },
     {
       "id": 19,
-      "name": "Stage 19: 최종 관문",
+      "name": "Stage 19: 달콤한 도전",
       "pairs": 7,
-      "categories": ["numbers", "dice"],
+      "categories": ["fruits", "desserts"],
       "lives": 5,
       "hints": 2,
-      "previewDuration": 2.0
+      "previewDuration": 1.5
     },
     {
       "id": 20,
-      "name": "Stage 20: 전설의 챔피언",
+      "name": "Stage 20: 숫자 전설",
       "pairs": 8,
       "categories": ["numbers", "dice"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 2.0
+      "previewDuration": 1.5
     },
     {
       "id": 21,
-      "name": "Stage 21: 새로운 도전",
+      "name": "Stage 21: 해변의 추억",
       "pairs": 8,
-      "categories": ["numbers", "dice"],
+      "categories": ["beachballs", "beachgear", "shells"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 22,
-      "name": "Stage 22: 기억력 마스터",
+      "name": "Stage 22: 수중 세계",
       "pairs": 8,
-      "categories": ["numbers", "dice"],
+      "categories": ["fish", "sealife"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 23,
-      "name": "Stage 23: 집중력 극한",
+      "name": "Stage 23: 과일 파티",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["fruits"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 24,
-      "name": "Stage 24: 기억의 달인",
+      "name": "Stage 24: 디저트 천국",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["desserts"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 25,
-      "name": "Stage 25: 완벽한 기억",
+      "name": "Stage 25: 도형 예술",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["shapes"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 26,
-      "name": "Stage 26: 초인적 집중",
+      "name": "Stage 26: 조개 컬렉션",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["shells"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 27,
-      "name": "Stage 27: 기억의 신",
+      "name": "Stage 27: 비치볼 축제",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["beachballs"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 28,
-      "name": "Stage 28: 불가능한 도전",
+      "name": "Stage 28: 물고기 왕국",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["fish"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
     },
     {
       "id": 29,
-      "name": "Stage 29: 최후의 시험",
+      "name": "Stage 29: 해양 제국",
       "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "categories": ["sealife"],
       "lives": 5,
       "hints": 3,
       "previewDuration": 1.0
