@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'game/lotty_memory_game.dart';
+import 'components/ui/start_dialog.dart';
 
 void main() {
   runApp(const GameApp());
@@ -31,11 +32,36 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late LottyMemoryGame game;
+  bool _hasShownStartDialog = false;
 
   @override
   void initState() {
     super.initState();
     game = LottyMemoryGame();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Show start dialog only once when the widget is first built
+    if (!_hasShownStartDialog) {
+      _hasShownStartDialog = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showStartDialog();
+      });
+    }
+  }
+
+  void _showStartDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StartDialog(
+        onStart: () {
+          // Dialog closes automatically, game starts
+        },
+      ),
+    );
   }
 
   @override
@@ -58,9 +84,7 @@ class _GameScreenState extends State<GameScreen> {
                 isGameActive = false;
               }
               final bool canUseHint = hasHints && isGameActive;
-              if (!hasHints) {
-                 return const SizedBox.shrink(); // Hide button when no hints
-              }
+
               return Positioned(
                 bottom: 40,
                 left: 0,
