@@ -34,6 +34,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   // ValueNotifier for Flutter UI (deprecated - using GameStateManager now)
   final ValueNotifier<int> hintCountNotifier = ValueNotifier<int>(0);
 
+  // Game ready state
+  bool _isGameReady = false;
+
   // Hint reveal state
   bool _isHintRevealing = false;
   double _hintRevealTimer = 0.0;
@@ -80,14 +83,24 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Initialize UI first
     await _initializeUI();
 
-    // Initialize cards based on current stage
-    await _initializeCards();
+    // Don't initialize cards yet - wait for start dialog
+    _isGameReady = true;
 
+  }
+
+  /// Start the game (called from StartDialog)
+  void startFirstStage() {
+    if (_isGameReady && _cards.isEmpty) {
+      _initializeCards();
+    }
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
+    // Don't update if game hasn't started yet
+    if (_cards.isEmpty) return;
 
     if (gameState.state == GameState.shuffling) {
       _shufflingTimer += dt;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'game_dialog.dart';
-import 'outlined_text.dart';
 
 /// 게임 시작 다이얼로그
 class StartDialog extends StatelessWidget {

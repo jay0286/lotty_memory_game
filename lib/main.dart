@@ -58,7 +58,8 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => StartDialog(
         onStart: () {
-          // Dialog closes automatically, game starts
+          // Start the first stage when dialog closes
+          game.startFirstStage();
         },
       ),
     );
