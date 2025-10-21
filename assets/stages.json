@@ -7,7 +7,7 @@
       "categories": ["numbers"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 2,
@@ -16,7 +16,7 @@
       "categories": ["numbers", "dice"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 2.0
     },
     {
       "id": 3,
@@ -25,7 +25,7 @@
       "categories": ["numbers", "dice"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 3.0
     },
     {
       "id": 4,
@@ -34,7 +34,7 @@
       "categories": ["numbers", "dice"],
       "lives": 3,
       "hints": 0,
-      "previewDuration": 4.0
+      "previewDuration": 2.0
     },
     {
       "id": 5,

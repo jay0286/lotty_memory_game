@@ -28,6 +28,7 @@ class GameStateManager {
   final VoidCallback? onHintsChanged;
   final VoidCallback? onGameOver;
   final VoidCallback? onGameWon;
+  final VoidCallback? onStateChanged;
 
   GameStateManager({
     required this.totalPairs,
@@ -36,6 +37,7 @@ class GameStateManager {
     this.onHintsChanged,
     this.onGameOver,
     this.onGameWon,
+    this.onStateChanged,
   });
 
   GameState get state => _state;
@@ -90,12 +92,14 @@ class GameStateManager {
   void startPreview() {
     if (_state == GameState.shuffling) {
       _state = GameState.preview;
+      onStateChanged?.call();
     }
   }
 
   void startGame() {
     if (_state == GameState.preview) {
       _state = GameState.playing;
+      onStateChanged?.call();
     }
   }
 

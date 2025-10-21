@@ -223,10 +223,26 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       return;
     }
 
-    // Calculate card layout with responsive sizing
+    // Calculate card layout with responsive sizing based on screen orientation
     final columns = GameConfig.cardLayoutColumns;
-    final cardSize = size.x * GameConfig.cardSizeFraction;
-    final cardSpacing = size.x * GameConfig.cardSpacingFraction;
+
+    // Determine card size based on screen aspect ratio
+    // For wide screens (landscape), use screen height as reference
+    // For tall screens (portrait), use screen width as reference
+    final aspectRatio = size.x / size.y;
+    final double cardSize;
+    final double cardSpacing;
+
+    if (aspectRatio > 1.2) {
+      // Landscape: base on height to prevent cards from being too large
+      cardSize = size.y * GameConfig.cardSizeFraction;
+      cardSpacing = size.y * GameConfig.cardSpacingFraction;
+    } else {
+      // Portrait: base on width (original behavior)
+      cardSize = size.x * GameConfig.cardSizeFraction;
+      cardSpacing = size.x * GameConfig.cardSpacingFraction;
+    }
+
     final startX = (size.x - (columns - 1) * cardSpacing) / 2;
     final rowSpacing = cardSize * GameConfig.cardRowSpacingMultiplier;
     final startY = size.y * GameConfig.cardLayoutStartY;
@@ -260,15 +276,18 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Initialize game state with stage settings
     gameState = GameStateManager(
       totalPairs: stage.pairs,
-      onScoreChanged: () {
-        // Score display removed
-      },
       onLivesChanged: () {
         _livesDisplay.updateLives(gameState.lives);
       },
       onHintsChanged: () {
         _hintDisplay.updateHintCount(gameState.hints);
         hintCountNotifier.value = gameState.hints;
+      },
+      onStateChanged: () {
+        // Trigger UI update when game state changes (for hint button activation)
+        final currentHints = gameState.hints;
+        hintCountNotifier.value = -1; // Temporary different value
+        hintCountNotifier.value = currentHints; // Back to actual value
       },
       onGameOver: () {
         _showGameOverScreen(false);

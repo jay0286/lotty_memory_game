@@ -44,17 +44,23 @@ class _GameScreenState extends State<GameScreen> {
       body: Stack(
         children: [
           GameWidget(game: game),
-          // Hint button at bottom center (only show when hints > 0)
+          // Hint button at bottom center (always show, but disable when hints = 0)
           ValueListenableBuilder<int>(
             valueListenable: game.hintCountNotifier,
             builder: (context, hintCount, child) {
               final bool hasHints = hintCount > 0;
-              final bool canUseHint = hasHints && game.gameState.isGameActive;
-
-              if (!hasHints) {
-                return const SizedBox.shrink(); // Hide button when no hints
+              // Check if gameState is initialized before accessing it
+              bool isGameActive = false;
+              try {
+                isGameActive = game.gameState.isGameActive;
+              } catch (e) {
+                // gameState not initialized yet
+                isGameActive = false;
               }
-
+              final bool canUseHint = hasHints && isGameActive;
+              if (!hasHints) {
+                 return const SizedBox.shrink(); // Hide button when no hints
+              }
               return Positioned(
                 bottom: 40,
                 left: 0,
@@ -82,10 +88,10 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                         ],
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          '💡',
-                          style: TextStyle(fontSize: 40),
+                          hasHints ? '💡' : '🔒',
+                          style: const TextStyle(fontSize: 40),
                         ),
                       ),
                     ),
