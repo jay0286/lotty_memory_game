@@ -19,7 +19,7 @@ class StageInfoWidget extends StatelessWidget {
         color: Colors.transparent,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
@@ -33,7 +33,7 @@ class StageInfoWidget extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            ': $stageName',
+            '$stageName',
             style: TextStyle(
               fontFamily: 'TJJoyofsinging',
               fontSize: 14,

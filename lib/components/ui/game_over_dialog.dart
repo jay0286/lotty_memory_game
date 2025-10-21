@@ -1,33 +1,19 @@
 import 'package:flutter/material.dart';
 
 /// 게임 오버 다이얼로그
-class GameOverDialog extends StatefulWidget {
+class GameOverDialog extends StatelessWidget {
   final VoidCallback onRetry;
   final int currentStage;
   final Duration elapsedTime;
-  final Future<void> Function(String playerName)? onSaveRanking;
+  final VoidCallback? onShowLeaderboard;
 
   const GameOverDialog({
     super.key,
     required this.onRetry,
     required this.currentStage,
     required this.elapsedTime,
-    this.onSaveRanking,
+    this.onShowLeaderboard,
   });
-
-  @override
-  State<GameOverDialog> createState() => _GameOverDialogState();
-}
-
-class _GameOverDialogState extends State<GameOverDialog> {
-  final TextEditingController _nameController = TextEditingController();
-  bool _isSaving = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
@@ -35,32 +21,13 @@ class _GameOverDialogState extends State<GameOverDialog> {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _handleRetry() async {
-    debugPrint('=== GameOverDialog: _handleRetry called ===');
-
-    if (widget.onSaveRanking != null) {
-      final playerName = _nameController.text.trim().isEmpty
-          ? 'Unknown'
-          : _nameController.text.trim();
-
-      debugPrint('Saving ranking with name: $playerName');
-      setState(() => _isSaving = true);
-
-      try {
-        await widget.onSaveRanking!(playerName);
-        debugPrint('Ranking save completed successfully');
-      } catch (e) {
-        debugPrint('Failed to save ranking: $e');
-      }
-
-      setState(() => _isSaving = false);
-    } else {
-      debugPrint('onSaveRanking callback is null!');
-    }
-
-    if (mounted) {
-      Navigator.of(context).pop();
-      widget.onRetry();
+  void _handleConfirm(BuildContext context) {
+    Navigator.of(context).pop();
+    // 다이얼로그 닫힌 후 리더보드 표시 (약간의 딜레이)
+    if (onShowLeaderboard != null) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        onShowLeaderboard!();
+      });
     }
   }
 
@@ -79,7 +46,7 @@ class _GameOverDialogState extends State<GameOverDialog> {
             decoration: BoxDecoration(
               color: const Color(0xffFF99BD),
               borderRadius: BorderRadius.circular(48),
-              border: Border.all(color: Colors.white, width: 8),
+              border: Border.all(color: Colors.white, width: 7),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.5),
@@ -117,26 +84,26 @@ class _GameOverDialogState extends State<GameOverDialog> {
                             fit: BoxFit.contain,
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(top: 110),
+                            padding: const EdgeInsets.only(top: 100),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    'Stage ${widget.currentStage}',
+                                    'Stage $currentStage',
                                     style: const TextStyle(
                                       fontFamily: 'TJJoyofsinging',
-                                      fontSize: 24,
+                                      fontSize: 22,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  // const SizedBox(height: 2),
                                   Text(
-                                    _formatDuration(widget.elapsedTime),
+                                    _formatDuration(elapsedTime),
                                     style: const TextStyle(
                                       fontFamily: 'TJJoyofsinging',
-                                      fontSize: 20,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                       color: Colors.white,
                                     ),
@@ -147,52 +114,7 @@ class _GameOverDialogState extends State<GameOverDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // 이름 입력 필드
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: TextField(
-                          controller: _nameController,
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            hintText: '이름 입력 (선택)',
-                            hintStyle: TextStyle(
-                              fontFamily: 'TJJoyofsinging',
-                              fontSize: 16,
-                              color: const Color(0xff300313).withValues(alpha: 0.5),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.8),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFFF4D8B),
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFFF4D8B),
-                                width: 3,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          style: const TextStyle(
-                            fontFamily: 'TJJoyofsinging',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xff300313),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 80),
+                      const SizedBox(height: 60),
                     ],
                   ),
                 ),
@@ -204,7 +126,7 @@ class _GameOverDialogState extends State<GameOverDialog> {
           Positioned(
             bottom: 0,
             child: GestureDetector(
-              onTap: _isSaving ? null : _handleRetry,
+              onTap: () => _handleConfirm(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -213,7 +135,7 @@ class _GameOverDialogState extends State<GameOverDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF4D8B),
                   borderRadius: BorderRadius.circular(36),
-                  border: Border.all(color: Colors.white, width: 7),
+                  border: Border.all(color: Colors.white, width: 6),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.3),
@@ -223,11 +145,11 @@ class _GameOverDialogState extends State<GameOverDialog> {
                   ],
                 ),
                 child: const Text(
-                  '다시하기',
+                  '확인',
                   style: TextStyle(
                     fontFamily: 'TJJoyofsinging',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),

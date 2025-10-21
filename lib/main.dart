@@ -12,6 +12,7 @@ import 'components/ui/hint_count_widget.dart';
 import 'components/ui/stage_info_widget.dart';
 import 'components/ui/timer_widget.dart';
 import 'services/ranking_service.dart';
+import 'screens/leaderboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,32 +88,53 @@ class _GameScreenState extends State<GameScreen> {
           // Start the first stage when dialog closes
           game.startFirstStage();
         },
+        onShowLeaderboard: () async {
+          // 리더보드 화면으로 이동 (await으로 돌아올 때까지 대기)
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => LeaderboardScreen(
+                onStartNewGame: null, // 시작 다이얼로그가 이미 있으므로 null
+              ),
+            ),
+          );
+          // 리더보드에서 돌아오면 아무것도 하지 않음 (시작 다이얼로그가 이미 열려있음)
+        },
       ),
     );
   }
 
   void _showGameOverDialog() {
-    debugPrint('=== Main: Showing game over dialog ===');
-    debugPrint('Stage reached: ${game.maxStageReached}');
-    debugPrint('Elapsed time: ${game.elapsedTime}');
+    final currentStage = game.maxStageReached;
+    final elapsedTime = game.elapsedTime;
+    final calculatedScore = RankingService.instance.calculateScore(
+      currentStage,
+      elapsedTime,
+    );
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => GameOverDialog(
-        currentStage: game.maxStageReached,
-        elapsedTime: game.elapsedTime,
-        onSaveRanking: (playerName) async {
-          debugPrint('=== Main: onSaveRanking callback triggered ===');
-          await RankingService.instance.saveRanking(
-            playerName: playerName,
-            stage: game.maxStageReached,
-            elapsedTime: game.elapsedTime,
+        currentStage: currentStage,
+        elapsedTime: elapsedTime,
+        onShowLeaderboard: () {
+          // 리더보드 화면으로 이동 (점수 데이터 전달)
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => LeaderboardScreen(
+                onStartNewGame: () {
+                  // 시작 다이얼로그 표시
+                  _showStartDialog();
+                },
+                newScore: calculatedScore,
+                newStage: currentStage,
+                newElapsedTime: elapsedTime,
+              ),
+            ),
           );
         },
         onRetry: () {
           // Restart the game
-          debugPrint('=== Main: Restarting game ===');
           game.restartGame();
         },
       ),
@@ -141,18 +163,47 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: game),
 
+          // Close button at top left
+          Positioned(
+            top: 24,
+            left: 20,
+            child: GestureDetector(
+              onTap: () {
+                // 게임을 완전히 재시작 (새 게임 인스턴스 생성)
+                setState(() {
+                  game = LottyMemoryGame();
+                  game.onShowGameOverDialog = _showGameOverDialog;
+                  game.onShowStageClearDialog = _showStageClearDialog;
+                });
+                // 시작 다이얼로그 표시
+                _showStartDialog();
+              },
+              child: CircleAvatar(
+                backgroundColor: Colors.white.withValues(alpha:0.3),
+                child: Icon(
+                  Icons.close,
+                  color: Colors.white.withValues(alpha:0.7),
+                  size: 32,
+                  weight: 900,
+                ),
+              ),
+            ),
+          ),
           // Stage number and Stage name display at top left
           Positioned(
-            top: 10,
-            left: 20,
-            child: ValueListenableBuilder<Map<String, dynamic>>(
-              valueListenable: game.stageInfoNotifier,
-              builder: (context, stageInfo, child) {
-                return StageInfoWidget(
-                  stageNumber: stageInfo['number'] as int,
-                  stageName: stageInfo['name'] as String,
-                );
-              },
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: ValueListenableBuilder<Map<String, dynamic>>(
+                valueListenable: game.stageInfoNotifier,
+                builder: (context, stageInfo, child) {
+                  return StageInfoWidget(
+                    stageNumber: stageInfo['number'] as int,
+                    stageName: stageInfo['name'] as String,
+                  );
+                },
+              ),
             ),
           ),
           // Timer, Hints and Lives display at top right
@@ -193,7 +244,7 @@ class _GameScreenState extends State<GameScreen> {
               final bool canUseHint = hasHints && isGameActive;
 
               return Positioned(
-                bottom: 56,
+                bottom: 80,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -203,7 +254,7 @@ class _GameScreenState extends State<GameScreen> {
                       child: Opacity(
                         opacity: canUseHint ? 1 : 0,
                         child: Container(
-                          width: 110,
+                          width: 130,
                           decoration: BoxDecoration(
                             shape: BoxShape.rectangle,
                             boxShadow: [

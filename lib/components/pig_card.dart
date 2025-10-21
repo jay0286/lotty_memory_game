@@ -60,14 +60,14 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
   // Water ripple parameters
   double _rippleTimer = 0.0;
-  double _rippleInterval = GameConfig.rippleInterval;
+  final double _rippleInterval = GameConfig.rippleInterval;
 
   // Match/Fail animation properties
   bool _isPlayingMatchAnimation = false;
   bool _isPlayingFailAnimation = false;
   double _animationTimer = 0.0;
   Vector2? _originalPosition;
-  double _originalAlpha = 1.0;
+  final double _originalAlpha = 1.0;
   Function()? _onFailAnimationComplete;
 
   // Collision detection flag

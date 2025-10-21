@@ -35,7 +35,7 @@ class GameDialog extends StatelessWidget {
           Container(
             constraints: const BoxConstraints(maxWidth: 320),
             margin: overlappingButton && buttonText != null
-                ? const EdgeInsets.only(bottom: 40) // 버튼 공간 확보
+                ? const EdgeInsets.only(bottom: 32) // 버튼 공간 확보
                 : EdgeInsets.zero,
             decoration: BoxDecoration(
               color: const Color(0xffFF99BD), 
