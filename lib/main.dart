@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'game/lotty_memory_game.dart';
 import 'game/stage_config.dart';
 import 'components/ui/start_dialog.dart';
@@ -15,11 +16,14 @@ import 'services/ranking_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase 초기화 (선택적 - Firebase 설정이 없으면 스킵)
+  // Firebase 초기화
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase initialized successfully');
   } catch (e) {
-    debugPrint('Firebase initialization skipped: $e');
+    debugPrint('Firebase initialization failed: $e');
   }
 
   runApp(const GameApp());
