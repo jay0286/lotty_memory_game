@@ -25,11 +25,13 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   bool _isProcessingMatch = false;
   double _matchCheckTimer = 0.0;
 
-  // Powerup inventory
-  int _hintCount = 0;
   final Random _random = Random();
 
-  // ValueNotifier for Flutter UI
+  // Persistent values across stages
+  int _currentLives = 0;
+  int _currentHints = 0;
+
+  // ValueNotifier for Flutter UI (deprecated - using GameStateManager now)
   final ValueNotifier<int> hintCountNotifier = ValueNotifier<int>(0);
 
   // Hint reveal state
@@ -264,6 +266,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       onLivesChanged: () {
         _livesDisplay.updateLives(gameState.lives);
       },
+      onHintsChanged: () {
+        _hintDisplay.updateHintCount(gameState.hints);
+        hintCountNotifier.value = gameState.hints;
+      },
       onGameOver: () {
         _showGameOverScreen(false);
       },
@@ -272,9 +278,19 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       },
     );
 
-    // Set lives from stage config
+    // Set max values from stage config
     gameState.maxLives = stage.lives;
-    gameState.lives = stage.lives; // This triggers onLivesChanged callback
+    gameState.maxHints = stage.hints;
+
+    // Apply minimum guarantee logic: use previous value if higher, otherwise use stage minimum
+    // If _currentLives is 0, it's the first stage, so use stage.lives
+    if (_currentLives == 0) {
+      gameState.lives = stage.lives;
+      gameState.hints = stage.hints;
+    } else {
+      gameState.lives = _currentLives > stage.lives ? _currentLives : stage.lives;
+      gameState.hints = _currentHints > stage.hints ? _currentHints : stage.hints;
+    }
 
     // Start preview after cards are created
     _startPreview();
@@ -452,10 +468,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
     switch (card.powerupType) {
       case PowerupType.hint:
-        _hintCount++;
-        hintCountNotifier.value = _hintCount;
-        _hintDisplay.updateHintCount(_hintCount);
-        print('[Powerup] Hint collected! Total hints: $_hintCount');
+        gameState.hints++;
+        print('[Powerup] Hint collected! Total hints: ${gameState.hints}');
         break;
       case PowerupType.heart:
         // Restore 1 life (up to max)
@@ -474,7 +488,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Use a hint to reveal all cards for a short duration
   void useHint() {
-    if (_hintCount <= 0) {
+    if (gameState.hints <= 0) {
       print('[Powerup] No hints available!');
       return;
     }
@@ -491,13 +505,11 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       return;
     }
 
-    _hintCount--;
-    hintCountNotifier.value = _hintCount;
-    _hintDisplay.updateHintCount(_hintCount);
+    gameState.hints--;
     _isHintRevealing = true;
     _hintRevealTimer = 0.0;
 
-    print('[Powerup] Hint used! Remaining hints: $_hintCount');
+    print('[Powerup] Hint used! Remaining hints: ${gameState.hints}');
 
     // Flip all face-down cards to face up
     for (final card in _cards) {
@@ -594,8 +606,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       StageManager.instance.nextStage();
       _loadNextStage();
     } else if (gameState.state == GameState.gameOver) {
-      // If game over, reset to first stage
+      // If game over, reset to first stage and clear persistent values
       StageManager.instance.reset();
+      _currentLives = 0;
+      _currentHints = 0;
       _loadNextStage();
     } else {
       // Otherwise just restart current stage
@@ -605,6 +619,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Load next stage (or restart current stage)
   void _loadNextStage() {
+    // Save current lives and hints before clearing game state
+    _currentLives = gameState.lives;
+    _currentHints = gameState.hints;
+
     // Remove all cards (only if they still have a parent)
     for (final card in _cards) {
       if (card.parent != null) {
@@ -621,10 +639,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _shufflingTimer = 0.0;
     _previewTimer = 0.0;
 
-    // Reset powerup state
-    _hintCount = 0;
-    hintCountNotifier.value = 0;
-    _hintDisplay.updateHintCount(0);
+    // Reset hint reveal state
     _isHintRevealing = false;
     _hintRevealTimer = 0.0;
 

@@ -15,14 +15,17 @@ enum GameState {
 class GameStateManager {
   int totalPairs;
   int maxLives = 5;
+  int maxHints = 0;
   int _foundPairs = 0;
   int _score = 0;
   int _lives = 5;
+  int _hints = 0;
   GameState _state = GameState.shuffling;
 
   // Callbacks
   final VoidCallback? onScoreChanged;
   final VoidCallback? onLivesChanged;
+  final VoidCallback? onHintsChanged;
   final VoidCallback? onGameOver;
   final VoidCallback? onGameWon;
 
@@ -30,6 +33,7 @@ class GameStateManager {
     required this.totalPairs,
     this.onScoreChanged,
     this.onLivesChanged,
+    this.onHintsChanged,
     this.onGameOver,
     this.onGameWon,
   });
@@ -40,6 +44,11 @@ class GameStateManager {
   set lives(int value) {
     _lives = value;
     onLivesChanged?.call();
+  }
+  int get hints => _hints;
+  set hints(int value) {
+    _hints = value;
+    onHintsChanged?.call();
   }
   int get foundPairs => _foundPairs;
 
@@ -95,9 +104,11 @@ class GameStateManager {
     _foundPairs = 0;
     _score = 0;
     _lives = maxLives;
+    _hints = maxHints;
     _state = GameState.shuffling;
 
     onScoreChanged?.call();
     onLivesChanged?.call();
+    onHintsChanged?.call();
   }
 }

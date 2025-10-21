@@ -9,6 +9,7 @@ class StageConfig {
   final int pairs;
   final List<CardCategory> categories;
   final int lives;
+  final int hints;
   final double previewDuration;
 
   StageConfig({
@@ -17,6 +18,7 @@ class StageConfig {
     required this.pairs,
     required this.categories,
     required this.lives,
+    required this.hints,
     required this.previewDuration,
   });
 
@@ -31,6 +33,7 @@ class StageConfig {
               ))
           .toList(),
       lives: json['lives'] as int,
+      hints: json['hints'] as int,
       previewDuration: (json['previewDuration'] as num).toDouble(),
     );
   }
