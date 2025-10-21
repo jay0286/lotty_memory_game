@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'game/lotty_memory_game.dart';
 import 'game/stage_config.dart';
 import 'components/ui/start_dialog.dart';
@@ -9,8 +10,18 @@ import 'components/ui/lives_count_widget.dart';
 import 'components/ui/hint_count_widget.dart';
 import 'components/ui/stage_info_widget.dart';
 import 'components/ui/timer_widget.dart';
+import 'services/ranking_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase 초기화 (선택적 - Firebase 설정이 없으면 스킵)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization skipped: $e');
+  }
+
   runApp(const GameApp());
 }
 
@@ -83,6 +94,13 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) => GameOverDialog(
         currentStage: game.maxStageReached,
         elapsedTime: game.elapsedTime,
+        onSaveRanking: (playerName) async {
+          await RankingService.instance.saveRanking(
+            playerName: playerName,
+            stage: game.maxStageReached,
+            elapsedTime: game.elapsedTime,
+          );
+        },
         onRetry: () {
           // Restart the game
           game.restartGame();

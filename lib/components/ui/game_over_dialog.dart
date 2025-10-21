@@ -1,22 +1,55 @@
 import 'package:flutter/material.dart';
 
 /// 게임 오버 다이얼로그
-class GameOverDialog extends StatelessWidget {
+class GameOverDialog extends StatefulWidget {
   final VoidCallback onRetry;
   final int currentStage;
   final Duration elapsedTime;
+  final Future<void> Function(String playerName)? onSaveRanking;
 
   const GameOverDialog({
     super.key,
     required this.onRetry,
     required this.currentStage,
     required this.elapsedTime,
+    this.onSaveRanking,
   });
+
+  @override
+  State<GameOverDialog> createState() => _GameOverDialogState();
+}
+
+class _GameOverDialogState extends State<GameOverDialog> {
+  final TextEditingController _nameController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _handleRetry() async {
+    if (widget.onSaveRanking != null && _nameController.text.trim().isNotEmpty) {
+      setState(() => _isSaving = true);
+      try {
+        await widget.onSaveRanking!(_nameController.text.trim());
+      } catch (e) {
+        debugPrint('Failed to save ranking: $e');
+      }
+      setState(() => _isSaving = false);
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      widget.onRetry();
+    }
   }
 
   @override
@@ -78,7 +111,7 @@ class GameOverDialog extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    'Stage $currentStage',
+                                    'Stage ${widget.currentStage}',
                                     style: const TextStyle(
                                       fontFamily: 'TJJoyofsinging',
                                       fontSize: 24,
@@ -88,7 +121,7 @@ class GameOverDialog extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    _formatDuration(elapsedTime),
+                                    _formatDuration(widget.elapsedTime),
                                     style: const TextStyle(
                                       fontFamily: 'TJJoyofsinging',
                                       fontSize: 20,
@@ -102,6 +135,51 @@ class GameOverDialog extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+
+                      // 이름 입력 필드
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: TextField(
+                          controller: _nameController,
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            hintText: '이름 입력 (선택)',
+                            hintStyle: TextStyle(
+                              fontFamily: 'TJJoyofsinging',
+                              fontSize: 16,
+                              color: const Color(0xff300313).withValues(alpha: 0.5),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.8),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFFF4D8B),
+                                width: 2,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFFF4D8B),
+                                width: 3,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontFamily: 'TJJoyofsinging',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff300313),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 80),
                     ],
                   ),
@@ -114,10 +192,7 @@ class GameOverDialog extends StatelessWidget {
           Positioned(
             bottom: 0,
             child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                onRetry();
-              },
+              onTap: _isSaving ? null : _handleRetry,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
