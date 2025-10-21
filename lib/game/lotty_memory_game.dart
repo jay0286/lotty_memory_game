@@ -246,31 +246,97 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     }
     cardValues.shuffle();
 
-    // Assign category groups and categories to each pair
-    // Step 1: Group available categories by their group type
+    // Assign category groups and categories to each pair while avoiding sprite reuse
+    // Step 1: Prepare available categories and sprite variant pools per group
     final categoryGroups = <CardCategoryGroup, List<CardCategory>>{};
-    for (final category in stage.categories) {
+    final categorySpritesCache = <CardCategory, List<Sprite>>{};
+    final categorySpriteCounts = <CardCategory, int>{};
+
+    for (final category in stage.categories.toSet()) {
+      final sprites = assetManager.getSpritesForCategory(category);
+      if (sprites.isEmpty) continue;
       categoryGroups.putIfAbsent(category.group, () => []).add(category);
+      categorySpritesCache[category] = sprites;
+      categorySpriteCounts[category] = sprites.length;
     }
 
-    // Step 2: For each pair, assign a group and then random categories from that group
+    if (categoryGroups.isEmpty) {
+      return;
+    }
+
+    final groupVariantPools = <CardCategoryGroup, List<int>>{};
+
+    void replenishGroupPool(CardCategoryGroup group) {
+      final categories = categoryGroups[group];
+      if (categories == null || categories.isEmpty) {
+        groupVariantPools[group] = [];
+        return;
+      }
+
+      final counts = categories.map((category) => categorySpriteCounts[category] ?? 0).toList();
+      if (counts.isEmpty) {
+        groupVariantPools[group] = [];
+        return;
+      }
+
+      final variantCount = counts.reduce(min);
+      if (variantCount <= 0) {
+        groupVariantPools[group] = [];
+        return;
+      }
+
+      final variants = List<int>.generate(variantCount, (index) => index);
+      variants.shuffle(random);
+      groupVariantPools[group] = variants;
+    }
+
+    for (final group in categoryGroups.keys) {
+      replenishGroupPool(group);
+    }
+
+    List<CardCategoryGroup> availableGroups() {
+      return groupVariantPools.entries.where((entry) => entry.value.isNotEmpty).map((entry) => entry.key).toList();
+    }
+
     final pairGroupAssignments = <int, CardCategoryGroup>{};
+    final pairVariantAssignments = <int, int>{};
     final cardCategoryAssignments = <int, CardCategory>{}; // card index -> category
 
     for (int pairId = 1; pairId <= stage.pairs; pairId++) {
-      // Pick a random group from available groups
-      final availableGroups = categoryGroups.keys.toList();
-      final selectedGroup = availableGroups[random.nextInt(availableGroups.length)];
+      var groups = availableGroups();
+      if (groups.isEmpty) {
+        for (final group in categoryGroups.keys) {
+          if (groupVariantPools[group]?.isEmpty ?? true) {
+            replenishGroupPool(group);
+          }
+        }
+        groups = availableGroups();
+        if (groups.isEmpty) {
+          break;
+        }
+      }
+
+      final selectedGroup = groups[random.nextInt(groups.length)];
+      final variants = groupVariantPools[selectedGroup]!;
+      final variantIndex = variants.removeLast();
+
       pairGroupAssignments[pairId] = selectedGroup;
+      pairVariantAssignments[pairId] = variantIndex;
     }
 
-    // Step 3: Assign categories to each individual card
+    // Step 2: Assign categories to each individual card using the selected group
     for (int i = 0; i < stage.totalCards; i++) {
       final pairId = cardValues[i];
-      final group = pairGroupAssignments[pairId]!;
-      final categoriesInGroup = categoryGroups[group]!;
+      final group = pairGroupAssignments[pairId];
+      if (group == null) {
+        continue;
+      }
 
-      // Each card in the pair can have a different category from the same group
+      final categoriesInGroup = categoryGroups[group];
+      if (categoriesInGroup == null || categoriesInGroup.isEmpty) {
+        continue;
+      }
+
       final category = categoriesInGroup[random.nextInt(categoriesInGroup.length)];
       cardCategoryAssignments[i] = category;
     }
@@ -308,16 +374,23 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Create cards
     for (int i = 0; i < stage.totalCards; i++) {
       final pairId = cardValues[i];
-      final category = cardCategoryAssignments[i]!;
-      final frontSprites = assetManager.getSpritesForCategory(category);
+      final category = cardCategoryAssignments[i];
+      if (category == null) {
+        continue;
+      }
 
+      final frontSprites = categorySpritesCache[category] ?? assetManager.getSpritesForCategory(category);
       if (frontSprites.isEmpty) {
         continue;
       }
 
+      final variantIndex = pairVariantAssignments[pairId] ?? 0;
+      final spriteIndex = variantIndex < frontSprites.length ? variantIndex : variantIndex % frontSprites.length;
+      final frontSprite = frontSprites[spriteIndex];
+
       final card = PigCard(
         backSprite: tubePigSprites[i % tubePigSprites.length],
-        frontSprite: frontSprites[(pairId - 1) % frontSprites.length],
+        frontSprite: frontSprite,
         cardValue: pairId,
         position: Vector2(
           startX + (i % columns) * cardSpacing,
