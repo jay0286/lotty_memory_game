@@ -10,7 +10,6 @@ import '../components/pig_card.dart';
 import '../components/shadow_layer.dart';
 import '../components/ui/lives_display.dart';
 import '../components/ui/hint_display.dart';
-import '../components/ui/game_over_overlay.dart';
 import '../config/game_config.dart';
 import 'game_state.dart';
 import 'stage_config.dart';
@@ -37,6 +36,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   // Game ready state
   bool _isGameReady = false;
 
+  // Callbacks for showing dialogs
+  void Function()? onShowGameOverDialog;
+  void Function()? onShowStageClearDialog;
+
   // Hint reveal state
   bool _isHintRevealing = false;
   double _hintRevealTimer = 0.0;
@@ -54,7 +57,6 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   // UI components
   late LivesDisplay _livesDisplay;
   late HintDisplay _hintDisplay;
-  GameOverOverlay? _gameOverOverlay;
 
   // Shadow layer
   late ShadowLayer _shadowLayer;
@@ -600,52 +602,35 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _targetPositions.clear();
   }
 
-  /// Show game over screen
+  /// Show game over screen or stage clear screen
   void _showGameOverScreen(bool isWin) {
-    String message;
     if (isWin) {
-      if (StageManager.instance.hasNextStage) {
-        final nextStage = StageManager.instance.currentStageNumber + 1;
-        message = 'Tap for Stage $nextStage';
-      } else {
-        message = 'All Stages Complete!\nTap to Restart';
-      }
+      // Show stage clear dialog
+      onShowStageClearDialog?.call();
     } else {
-      message = 'Tap to Retry';
+      // Show game over dialog
+      onShowGameOverDialog?.call();
     }
-
-    _gameOverOverlay = GameOverOverlay(
-      isWin: isWin,
-      finalScore: gameState.score,
-      gameSize: size,
-      onRestart: _restartGame,
-      customMessage: message,
-    )..priority = 200; // Draw on top of everything
-    add(_gameOverOverlay!);
   }
 
-  /// Restart the game (or move to next stage)
-  void _restartGame() {
-    // Remove game over overlay
-    if (_gameOverOverlay != null) {
-      remove(_gameOverOverlay!);
-      _gameOverOverlay = null;
-    }
+  /// Restart the game (after game over)
+  void restartGame() {
+    // Reset to first stage and clear persistent values
+    StageManager.instance.reset();
+    _currentLives = 0;
+    _currentHints = 0;
+    _loadNextStage();
+  }
 
-    // If won and there's a next stage, advance
-    if (gameState.state == GameState.gameWon &&
-        StageManager.instance.hasNextStage) {
+  /// Go to next stage (after stage clear)
+  void goToNextStage() {
+    // Advance to next stage
+    if (StageManager.instance.hasNextStage) {
       StageManager.instance.nextStage();
       _loadNextStage();
-    } else if (gameState.state == GameState.gameOver) {
-      // If game over, reset to first stage and clear persistent values
-      StageManager.instance.reset();
-      _currentLives = 0;
-      _currentHints = 0;
-      _loadNextStage();
     } else {
-      // Otherwise just restart current stage
-      _loadNextStage();
+      // All stages complete, restart from beginning
+      restartGame();
     }
   }
 
@@ -694,7 +679,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       if (event.logicalKey == LogicalKeyboardKey.keyR) {
         // Restart on 'R' key
         if (gameState.state != GameState.playing) {
-          _restartGame();
+          restartGame();
         }
         return KeyEventResult.handled;
       } else if (event.logicalKey == LogicalKeyboardKey.keyH) {
