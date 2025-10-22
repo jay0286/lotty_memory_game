@@ -51,7 +51,7 @@
       "pairs": 3,
       "categories": ["desserts"],
       "lives": 4,
-      "hints": 1,
+      "hints": 0,
       "previewDuration": 3.0
     },
     {
@@ -60,7 +60,7 @@
       "pairs": 4,
       "categories": ["beachballs"],
       "lives": 4,
-      "hints": 1,
+      "hints": 0,
       "previewDuration": 3.0
     },
     {
@@ -78,7 +78,7 @@
       "pairs": 4,
       "categories": ["shapes"],
       "lives": 4,
-      "hints": 1,
+      "hints": 0,
       "previewDuration": 3.0
     },
     {
@@ -96,7 +96,7 @@
       "pairs": 5,
       "categories": ["beachgear"],
       "lives": 4,
-      "hints": 2,
+      "hints": 1,
       "previewDuration": 2.5
     },
     {
@@ -150,7 +150,7 @@
       "pairs": 7,
       "categories": ["shapes", "beachballs"],
       "lives": 5,
-      "hints": 3,
+      "hints": 2,
       "previewDuration": 2.0
     },
     {
@@ -159,7 +159,7 @@
       "pairs": 7,
       "categories": ["shells", "fish", "sealife"],
       "lives": 5,
-      "hints": 2,
+      "hints": 3,
       "previewDuration": 2.0
     },
     {
@@ -177,7 +177,7 @@
       "pairs": 8,
       "categories": ["numbers", "dice"],
       "lives": 5,
-      "hints": 3,
+      "hints": 2,
       "previewDuration": 1.5
     },
     {
@@ -200,75 +200,75 @@
     },
     {
       "id": 23,
-      "name": "과일 파티",
+      "name": "해변의 과일 파티",
       "pairs": 9,
-      "categories": ["fruits"],
+      "categories": ["fruits","beachballs", "sealife"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 24,
       "name": "디저트 천국",
       "pairs": 9,
-      "categories": ["desserts"],
+      "categories": ["fruits","desserts"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 25,
-      "name": "도형 예술",
+      "name": "수학  예술",
       "pairs": 9,
-      "categories": ["shapes"],
+      "categories": ["shapes", "dice"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 26,
-      "name": "조개 컬렉션",
-      "pairs": 9,
-      "categories": ["shells"],
+      "name": "트로피컬 믹스",
+      "pairs": 10,
+      "categories": ["fruits", "desserts", "shells"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 27,
-      "name": "비치볼 축제",
-      "pairs": 9,
-      "categories": ["beachballs"],
+      "name": "바다와 해변",
+      "pairs": 10,
+      "categories": ["sealife", "beachballs", "beachgear"],
       "lives": 5,
       "hints": 3,
-      "previewDuration": 1.0
+      "previewDuration": 1.5
     },
     {
       "id": 28,
-      "name": "물고기 왕국",
-      "pairs": 9,
-      "categories": ["fish"],
+      "name": "완벽한 여름",
+      "pairs": 10,
+      "categories": ["fruits", "desserts", "beachballs", "beachgear"],
       "lives": 5,
-      "hints": 3,
-      "previewDuration": 1.0
+      "hints": 2,
+      "previewDuration": 1.2
     },
     {
       "id": 29,
-      "name": "해양 제국",
-      "pairs": 9,
-      "categories": ["sealife"],
+      "name": "수중 탐험대",
+      "pairs": 10,
+      "categories": ["fish", "sealife", "shells"],
       "lives": 5,
-      "hints": 3,
-      "previewDuration": 1.0
+      "hints": 2,
+      "previewDuration": 1.2
     },
     {
       "id": 30,
-      "name": "궁극의 챔피언",
-      "pairs": 9,
-      "categories": ["numbers", "dice"],
+      "name": "그랜드 챌린지",
+      "pairs": 12,
+      "categories": ["shapes", "numbers", "dice", "fruits", "desserts"],
       "lives": 5,
-      "hints": 3,
-      "previewDuration": 1.0
+      "hints": 2,
+      "previewDuration": 1.2
     }
   ]
 }

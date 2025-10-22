@@ -27,7 +27,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   bool _isSaving = false;
   int? _newEntryRank; // 새로운 점수가 몇 위인지
   bool _hasBeenSaved = false; // 저장 완료 여부
-  bool _hasScrolled = false; // 자동 스크롤 완료 여부
 
   @override
   void dispose() {
@@ -41,28 +40,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  // 내 순위로 스크롤
-  void _scrollToMyRank(int index) {
-    // 약간의 딜레이 후 스크롤 (리스트가 완전히 렌더링된 후)
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted || !_scrollController.hasClients) return;
-
-      // 각 아이템의 높이 (margin 포함): 12 (margin) + 72 (아이템 높이) = 84
-      const itemHeight = 84.0;
-      final targetOffset = index * itemHeight;
-
-      // 화면 중앙에 위치하도록 조정
-      final screenHeight = MediaQuery.of(context).size.height;
-      final centeredOffset = targetOffset - (screenHeight / 2) + (itemHeight / 2);
-
-      _scrollController.animateTo(
-        centeredOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOutCubic,
-      );
-    });
   }
 
   // 새 점수를 기존 순위 리스트에 삽입하여 순위 계산
@@ -98,14 +75,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           setState(() {
             _newEntryRank = newEntryIndex + 1;
           });
-          // 자동으로 포커스
-          _nameFocusNode.requestFocus();
-
-          // 내 순위로 자동 스크롤
-          if (!_hasScrolled) {
-            _scrollToMyRank(newEntryIndex);
-            _hasScrolled = true;
-          }
         }
       });
     }
@@ -258,6 +227,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       return ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: rankings.length,
                         itemBuilder: (context, index) {
                           final entry = rankings[index];
@@ -338,10 +309,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   Expanded(
                                     child: isNewEntry
                                         ? TextField(
+                                            key: const ValueKey('name_input_field'),
                                             controller: _nameController,
                                             focusNode: _nameFocusNode,
                                             enabled: !_isSaving,
                                             textAlign: TextAlign.center,
+                                            autofocus: false,
+                                            enableInteractiveSelection: true,
                                             decoration: InputDecoration(
                                               hintText: '이름 입력',
                                               hintStyle: TextStyle(
