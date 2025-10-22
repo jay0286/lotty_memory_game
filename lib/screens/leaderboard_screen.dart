@@ -184,19 +184,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                       ),
                         onPressed: () {
+                          // 먼저 화면을 닫고
                           Navigator.of(context).pop();
+                          // 약간의 지연 후 콜백 실행 (context가 안전하게 정리된 후)
                           if (widget.onStartNewGame != null) {
-                            widget.onStartNewGame!();
+                            Future.microtask(() => widget.onStartNewGame!());
                           }
                         },
                       ),
                       const Expanded(
                         child: Text(
-                          '그리피의 기억 랭킹',
+                          '그리피의 메모리',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'TJJoyofsinging',
-                            fontSize: 30,
+                            fontSize: 28,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -276,7 +278,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             bgColor = Colors.white.withValues(alpha: 0.85);
                           } else {
                             rankColor = const Color(0xFFFF4D8B);
-                            bgColor = Colors.white.withValues(alpha: 0.8);
+                            bgColor = Colors.white.withValues(alpha: 0.7);
                           }
 
                           // 새 엔트리는 하이라이트
@@ -292,7 +294,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: rankColor,
-                                width: isNewEntry ? 4 : (rank <= 3 ? 3 : 2),
+                                width: isNewEntry ? 4 : (rank <= 3 ? 3 : 0.1),
                               ),
                               boxShadow: [
                                 if (rank <= 3 || isNewEntry)

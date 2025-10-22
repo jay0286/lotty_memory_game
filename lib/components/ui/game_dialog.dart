@@ -11,6 +11,7 @@ class GameDialog extends StatelessWidget {
   final Widget? customContent;
   final bool showCloseButton;
   final bool overlappingButton; // 버튼이 다이얼로그에 반쯤 걸치도록
+  final VoidCallback? onShowLeaderboard;
 
   const GameDialog({
     super.key,
@@ -21,6 +22,7 @@ class GameDialog extends StatelessWidget {
     this.customContent,
     this.showCloseButton = true,
     this.overlappingButton = false,
+    this.onShowLeaderboard,
   });
 
   @override
@@ -66,12 +68,12 @@ class GameDialog extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontFamily: 'TJJoyofsinging',
-                              fontSize: 32,
+                              fontSize: 36,
                               fontWeight: FontWeight.w900,
                               color:Color(0xFFF4256D),
                             ),
-                            outlineColor:  Color(0xFFE5EEFF),
-                            outlineWidth: 7.0,
+                            outlineColor:  Color(0xFFFFE5EF),
+                            outlineWidth: 8.0,
                           ),
                   ),
                 ),
@@ -119,39 +121,74 @@ class GameDialog extends StatelessWidget {
           // 겹치는 버튼 (다이얼로그 하단에 반쯤 걸침)
           if (overlappingButton && buttonText != null)
             Positioned(
-              bottom: 0,
-              child: GestureDetector(
-                onTap: onButtonPressed ?? () => Navigator.of(context).pop(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF4D8B),
-                    borderRadius: BorderRadius.circular(36),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 7,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
+              top: 290,
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: onButtonPressed ?? () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    buttonText!,
-                    style: const TextStyle(
-                      fontFamily: 'TJJoyofsinging',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF4D8B),
+                        borderRadius: BorderRadius.circular(36),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 7,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        buttonText!,
+                        style: const TextStyle(
+                          fontFamily: 'TJJoyofsinging',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (onShowLeaderboard != null) ...[
+                    const SizedBox(height: 48),
+                    TextButton(
+                      onPressed: onShowLeaderboard,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      child:  Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(65, 67, 66, 66),
+                          borderRadius: BorderRadius.circular(36),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 10,
+                        ),
+                        child: Text(
+                          '랭킹 보러가기',
+                          style: TextStyle(
+                            fontFamily: 'TJJoyofsinging',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha:0.9),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
         ],

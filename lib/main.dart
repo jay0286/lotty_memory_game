@@ -85,19 +85,29 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => StartDialog(
         onStart: () {
-          // Start the first stage when dialog closes
           game.startFirstStage();
         },
         onShowLeaderboard: () async {
-          // 리더보드 화면으로 이동 (await으로 돌아올 때까지 대기)
+          // 시작 다이얼로그를 닫음
+          Navigator.of(context).pop();
+
+          // 리더보드 화면으로 이동
           await Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => LeaderboardScreen(
-                onStartNewGame: null, // 시작 다이얼로그가 이미 있으므로 null
+              builder: (context) => const LeaderboardScreen(
+                onStartNewGame: null,
               ),
             ),
           );
-          // 리더보드에서 돌아오면 아무것도 하지 않음 (시작 다이얼로그가 이미 열려있음)
+
+          // 리더보드에서 돌아오면 시작 다이얼로그 다시 표시
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _showStartDialog();
+              }
+            });
+          }
         },
       ),
     );
@@ -117,24 +127,43 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) => GameOverDialog(
         currentStage: currentStage,
         elapsedTime: elapsedTime,
-        onShowLeaderboard: () {
+        onShowLeaderboard: () async {
+          // 게임 오버 다이얼로그를 닫음
+          Navigator.of(context).pop();
+
           // 리더보드 화면으로 이동 (점수 데이터 전달)
-          Navigator.of(context).push(
+          await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => LeaderboardScreen(
-                onStartNewGame: () {
-                  // 시작 다이얼로그 표시
-                  _showStartDialog();
-                },
+                onStartNewGame: null,
                 newScore: calculatedScore,
                 newStage: currentStage,
                 newElapsedTime: elapsedTime,
               ),
             ),
           );
+
+          // 리더보드에서 돌아온 후 게임을 완전히 재시작
+          if (mounted) {
+            // StageManager를 먼저 리셋 (싱글톤이므로 명시적 리셋 필요)
+            StageManager.instance.reset();
+
+            // 새 게임 인스턴스 생성
+            setState(() {
+              game = LottyMemoryGame();
+              game.onShowGameOverDialog = _showGameOverDialog;
+              game.onShowStageClearDialog = _showStageClearDialog;
+            });
+
+            // 시작 다이얼로그 표시
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _showStartDialog();
+              }
+            });
+          }
         },
         onRetry: () {
-          // Restart the game
           game.restartGame();
         },
       ),
@@ -169,20 +198,20 @@ class _GameScreenState extends State<GameScreen> {
             left: 20,
             child: GestureDetector(
               onTap: () {
-                // 게임을 완전히 재시작 (새 게임 인스턴스 생성)
+                // StageManager를 리셋하고 새 게임 인스턴스 생성
+                StageManager.instance.reset();
                 setState(() {
                   game = LottyMemoryGame();
                   game.onShowGameOverDialog = _showGameOverDialog;
                   game.onShowStageClearDialog = _showStageClearDialog;
                 });
-                // 시작 다이얼로그 표시
                 _showStartDialog();
               },
               child: CircleAvatar(
-                backgroundColor: Colors.white.withValues(alpha:0.3),
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
                 child: Icon(
                   Icons.close,
-                  color: Colors.white.withValues(alpha:0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   size: 32,
                   weight: 900,
                 ),
@@ -221,9 +250,9 @@ class _GameScreenState extends State<GameScreen> {
 
           // Timer, Hints and Lives display at top right
           Positioned(
-            top: 96,
-                left: 0,
-                right: 0,
+            top: 112,
+            left: 0,
+            right: 0,
             child: Center(
               child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
             ),
@@ -244,7 +273,7 @@ class _GameScreenState extends State<GameScreen> {
               final bool canUseHint = hasHints && isGameActive;
 
               return Positioned(
-                bottom: 80,
+                bottom: 90,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -254,25 +283,35 @@ class _GameScreenState extends State<GameScreen> {
                       child: Opacity(
                         opacity: canUseHint ? 1 : 0,
                         child: Container(
-                          width: 130,
+                          width: 120,
+                          height: 120,
                           decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(64),
+                            border: Border.all(
+                              color: Color(0xffffcb00).withValues(alpha: 0.7),
+                              width: 7,
+                            ),
+                            image: const DecorationImage(
+                              image: AssetImage('assets/images/hint_small.png'),
+                              fit: BoxFit.cover,
+                            ),
                             shape: BoxShape.rectangle,
                             boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 9,
-                                offset: const Offset(9, 9),
-                              ),
-                            ],
+                                BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.4),
+                                      blurRadius: 9,
+                                      offset: const Offset(9, 9),
+                                    ),
+                                  ],
                           ),
-                          child: Image.asset(
-                            'assets/images/hint_wide.png',
-                            fit: BoxFit.contain,
+                          child: 
+                          SizedBox(
+                            width: 42,
+                            height: 42,
                           ),
-                        ),
                       ),
                     ),
-                  ),
+                  ),)
                 ),
               );
             },
