@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lotty_memory_game/components/ui/outlined_text.dart';
 
 /// 스테이지 클리어 다이얼로그
 class StageClearDialog extends StatelessWidget {
@@ -48,58 +49,49 @@ class StageClearDialog extends StatelessWidget {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 상단 여백
+                SizedBox(height: 80, 
+                  child: Center(
+                    child: OutlinedText(
+                            '스테이지 $currentStage 완료',
+                            style: const TextStyle(
+                              fontFamily: 'TJJoyofsinging',
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xffF4256D),
+                            ),
+                            outlineColor: Color(0xFFFFE5EF),
+                            outlineWidth: 7.0,
+                          ),
+                  ),
+                ),
 
                 // 내용 영역
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: const Color(0xffFFCCDE),
-                      borderRadius: BorderRadius.circular(36),
+                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(36), bottomRight: Radius.circular(36)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(height: 24),
-
-                        // 스테이지 클리어 텍스트
-                        const Text(
-                          'Stage Clear!',
-                          style: TextStyle(
-                            fontFamily: 'TJJoyofsinging',
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xff300313),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // 현재 스테이지 번호
-                        Text(
-                          'Stage $currentStage 완료',
-                          style: const TextStyle(
-                            fontFamily: 'TJJoyofsinging',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xff300313),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // 경과 시간
-                        const SizedBox(width: 6),
+                        const SizedBox(height: 22),
                         Text(
                          _formatDuration(elapsedTime),
                          style: TextStyle(
                            fontFamily: 'TJJoyofsinging',
-                           fontSize: 20,
-                           fontWeight: FontWeight.w700,
-                           color: const Color(0xff300313).withValues(alpha: 0.7),
+                           fontSize: 32,
+                           fontWeight: FontWeight.w800,
+                           color: Color(0xff300313).withValues(alpha: 0.9),
                          ),
                                                     ),
 
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 42),
                       ],
                     ),
                   ),
@@ -140,8 +132,8 @@ class StageClearDialog extends StatelessWidget {
                   '다음 스테이지',
                   style: TextStyle(
                     fontFamily: 'TJJoyofsinging',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),

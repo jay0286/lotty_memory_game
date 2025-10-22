@@ -21,7 +21,7 @@ class TimerWidget extends StatelessWidget {
       valueListenable: elapsedTimeNotifier,
       builder: (context, elapsed, child) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(18),
@@ -31,7 +31,7 @@ class TimerWidget extends StatelessWidget {
             children: [
                Icon(
                 Icons.timer,
-                size: 32,
+                size: 30,
                 color: Colors.white.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 6),
@@ -39,7 +39,7 @@ class TimerWidget extends StatelessWidget {
                 _formatDuration(elapsed),
                 style:  TextStyle(
                   fontFamily: 'TJJoyofsinging',
-                  fontSize: 32,
+                  fontSize: 30,
                   fontWeight: FontWeight.w900,
                   color: Colors.white.withValues(alpha: 0.7),
                 ),

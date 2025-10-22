@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'dart:ui' show Canvas, Color, ImageFilter, Paint;
+import 'dart:ui' show Canvas;
 import 'dart:math' as math;
 import 'water_ripple.dart';
 import '../config/game_config.dart';
@@ -67,7 +67,6 @@ class PigCard extends SpriteComponent with TapCallbacks {
   bool _isPlayingFailAnimation = false;
   double _animationTimer = 0.0;
   Vector2? _originalPosition;
-  final double _originalAlpha = 1.0;
   Function()? _onFailAnimationComplete;
 
   // Collision detection flag
