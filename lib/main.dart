@@ -254,7 +254,9 @@ class _GameScreenState extends State<GameScreen> {
             left: 0,
             right: 0,
             child: Center(
-              child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
+              child: IgnorePointer(
+                child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
+              ),
             ),
           ),
           // Hint button at bottom center (always show, but disable when hints = 0)
@@ -277,38 +279,41 @@ class _GameScreenState extends State<GameScreen> {
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: GestureDetector(
-                    onTap: canUseHint ? () => game.useHint() : null,
-                    child: Center(
-                      child: Opacity(
-                        opacity: canUseHint ? 1 : 0,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(64),
-                            border: Border.all(
-                              color: Color(0xffffcb00).withValues(alpha: 0.7),
-                              width: 7,
+                  child: IgnorePointer(
+                    ignoring: !canUseHint,
+                    child: GestureDetector(
+                      onTap: canUseHint ? () => game.useHint() : null,
+                      child: Center(
+                        child: Opacity(
+                          opacity: canUseHint ? 1 : 0,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(64),
+                              border: Border.all(
+                                color: Color(0xffffcb00).withValues(alpha: 0.7),
+                                width: 7,
+                              ),
+                              image: const DecorationImage(
+                                image: AssetImage('assets/images/hint_small.png'),
+                                fit: BoxFit.cover,
+                              ),
+                              shape: BoxShape.rectangle,
+                              boxShadow: [
+                                  BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.4),
+                                        blurRadius: 9,
+                                        offset: const Offset(9, 9),
+                                      ),
+                                    ],
                             ),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/hint_small.png'),
-                              fit: BoxFit.cover,
+                            child:
+                            SizedBox(
+                              width: 42,
+                              height: 42,
                             ),
-                            shape: BoxShape.rectangle,
-                            boxShadow: [
-                                BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.4),
-                                      blurRadius: 9,
-                                      offset: const Offset(9, 9),
-                                    ),
-                                  ],
-                          ),
-                          child: 
-                          SizedBox(
-                            width: 42,
-                            height: 42,
-                          ),
+                        ),
                       ),
                     ),
                   ),)
