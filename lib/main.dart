@@ -13,6 +13,7 @@ import 'components/ui/hint_count_widget.dart';
 import 'components/ui/stage_info_widget.dart';
 import 'components/ui/timer_widget.dart';
 import 'managers/difficulty_manager.dart';
+import 'managers/sound_manager.dart';
 import 'services/ranking_service.dart';
 import 'screens/leaderboard_screen.dart';
 
@@ -101,7 +102,9 @@ class _GameScreenState extends State<GameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => StartDialog(
-        onStart: () {
+        onStart: () async {
+          // iOS/Android에서 사용자 터치 직후 오디오 활성화 (중요!)
+          await SoundManager().enableSound();
           game.startFirstStage();
         },
         onShowLeaderboard: () async {

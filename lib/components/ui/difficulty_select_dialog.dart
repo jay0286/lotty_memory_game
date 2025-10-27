@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../managers/difficulty_manager.dart';
+import '../../managers/sound_manager.dart';
 import 'outlined_text.dart';
 
 /// 난이도 선택 다이얼로그
@@ -73,9 +74,12 @@ class DifficultySelectDialog extends StatelessWidget {
                     // 쉬움 버튼
                     _DifficultyButton(
                       difficulty: Difficulty.easy,
-                      onPressed: () {
+                      onPressed: () async {
+                        final nav = Navigator.of(context);
+                        // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
+                        await SoundManager().enableSound();
                         DifficultyManager().setDifficulty(Difficulty.easy);
-                        Navigator.of(context).pop();
+                        nav.pop();
                         onDifficultySelected();
                       },
                     ),
@@ -83,9 +87,12 @@ class DifficultySelectDialog extends StatelessWidget {
                     // 중간 버튼
                     _DifficultyButton(
                       difficulty: Difficulty.medium,
-                      onPressed: () {
+                      onPressed: () async {
+                        final nav = Navigator.of(context);
+                        // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
+                        await SoundManager().enableSound();
                         DifficultyManager().setDifficulty(Difficulty.medium);
-                        Navigator.of(context).pop();
+                        nav.pop();
                         onDifficultySelected();
                       },
                     ),
@@ -93,9 +100,12 @@ class DifficultySelectDialog extends StatelessWidget {
                     // 어려움 버튼
                     _DifficultyButton(
                       difficulty: Difficulty.hard,
-                      onPressed: () {
+                      onPressed: () async {
+                        final nav = Navigator.of(context);
+                        // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
+                        await SoundManager().enableSound();
                         DifficultyManager().setDifficulty(Difficulty.hard);
-                        Navigator.of(context).pop();
+                        nav.pop();
                         onDifficultySelected();
                       },
                     ),
