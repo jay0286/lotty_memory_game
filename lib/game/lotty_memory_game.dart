@@ -23,9 +23,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   bool _isProcessingMatch = false;
   double _matchCheckTimer = 0.0;
 
-  // Queue for next pair selection during match processing
-  PigCard? _queuedFirstCard;
-  PigCard? _queuedSecondCard;
+  // Queue for next pair selections during match processing
+  final List<PigCard> _queuedCards = [];
 
   final Random _random = Random();
 
@@ -187,7 +186,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       if (_matchCheckTimer >= GameConfig.matchCheckDelay) {
         _checkMatch();
         _matchCheckTimer = 0.0;
-        _isProcessingMatch = false;
+        // Note: _isProcessingMatch is managed inside _checkMatch() now
       }
     }
 
@@ -516,9 +515,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (!gameState.isGameActive || _isShuffling) return;
     if (card.state != CardState.faceDown) return;
 
-    // Don't allow selecting cards that are already selected in current or queued pair
-    if (card == _firstSelectedCard || card == _secondSelectedCard ||
-        card == _queuedFirstCard || card == _queuedSecondCard) {
+    // Don't allow selecting cards that are already selected in current or queued pairs
+    if (card == _firstSelectedCard || card == _secondSelectedCard || _queuedCards.contains(card)) {
       return;
     }
 
@@ -536,12 +534,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       // Second card selected
       _secondSelectedCard = card;
       _isProcessingMatch = true;
-    } else if (_isProcessingMatch && _queuedFirstCard == null) {
-      // Third card selected (queued first card)
-      _queuedFirstCard = card;
-    } else if (_isProcessingMatch && _queuedSecondCard == null && card != _queuedFirstCard) {
-      // Fourth card selected (queued second card)
-      _queuedSecondCard = card;
+    } else if (_isProcessingMatch) {
+      // Additional cards go into queue
+      _queuedCards.add(card);
     }
   }
 
@@ -651,13 +646,13 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _secondSelectedCard = null;
 
     // Process queued cards if any
-    if (_queuedFirstCard != null) {
-      _firstSelectedCard = _queuedFirstCard;
-      _queuedFirstCard = null;
+    if (_queuedCards.isNotEmpty) {
+      // Take first card from queue
+      _firstSelectedCard = _queuedCards.removeAt(0);
 
-      if (_queuedSecondCard != null) {
-        _secondSelectedCard = _queuedSecondCard;
-        _queuedSecondCard = null;
+      if (_queuedCards.isNotEmpty) {
+        // Take second card from queue
+        _secondSelectedCard = _queuedCards.removeAt(0);
         // Keep processing match for the queued pair
         // Set timer to almost complete for nearly instant check (0.1s delay for visual feedback)
         _isProcessingMatch = true;
@@ -883,8 +878,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _previewTimer = 0.0;
 
     // Reset queued cards
-    _queuedFirstCard = null;
-    _queuedSecondCard = null;
+    _queuedCards.clear();
 
     // Reset hint reveal state
     _isHintRevealing = false;
