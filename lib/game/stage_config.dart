@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../utils/asset_manager.dart';
+import '../managers/difficulty_manager.dart';
 
 /// Configuration for a single stage
 class StageConfig {
@@ -73,9 +74,18 @@ class StageManager {
     }
   }
 
-  /// Reset to first stage
+  /// Reset to first stage (or difficulty-based starting stage)
   void reset() {
-    _currentStageIndex = 0;
+    final startStage = DifficultyManager().startStage;
+    // startStage는 1-based이므로 index는 startStage - 1
+    _currentStageIndex = startStage - 1;
+  }
+
+  /// Set to specific stage (1-based stage number)
+  void setStage(int stageNumber) {
+    if (stageNumber >= 1 && stageNumber <= _stages.length) {
+      _currentStageIndex = stageNumber - 1;
+    }
   }
 
   /// Get current stage number (1-based)

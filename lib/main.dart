@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'game/lotty_memory_game.dart';
 import 'game/stage_config.dart';
+import 'components/ui/difficulty_select_dialog.dart';
 import 'components/ui/start_dialog.dart';
 import 'components/ui/game_over_dialog.dart';
 import 'components/ui/stage_clear_dialog.dart';
@@ -11,6 +12,7 @@ import 'components/ui/lives_count_widget.dart';
 import 'components/ui/hint_count_widget.dart';
 import 'components/ui/stage_info_widget.dart';
 import 'components/ui/timer_widget.dart';
+import 'managers/difficulty_manager.dart';
 import 'services/ranking_service.dart';
 import 'screens/leaderboard_screen.dart';
 
@@ -56,7 +58,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late LottyMemoryGame game;
-  bool _hasShownStartDialog = false;
+  bool _hasShownDifficultyDialog = false;
 
   @override
   void initState() {
@@ -70,13 +72,28 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Show start dialog only once when the widget is first built
-    if (!_hasShownStartDialog) {
-      _hasShownStartDialog = true;
+    // Show difficulty dialog only once when the widget is first built
+    if (!_hasShownDifficultyDialog) {
+      _hasShownDifficultyDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showStartDialog();
+        _showDifficultySelectDialog();
       });
     }
+  }
+
+  void _showDifficultySelectDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => DifficultySelectDialog(
+        onDifficultySelected: () {
+          // 난이도 선택 후 StageManager를 해당 난이도의 시작 스테이지로 설정
+          StageManager.instance.reset();
+          // 시작 다이얼로그 표시
+          _showStartDialog();
+        },
+      ),
+    );
   }
 
   void _showStartDialog() {
@@ -100,11 +117,11 @@ class _GameScreenState extends State<GameScreen> {
             ),
           );
 
-          // 리더보드에서 돌아오면 시작 다이얼로그 다시 표시
+          // 리더보드에서 돌아오면 난이도 선택부터 다시 시작
           if (mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                _showStartDialog();
+                _showDifficultySelectDialog();
               }
             });
           }
@@ -145,6 +162,8 @@ class _GameScreenState extends State<GameScreen> {
 
           // 리더보드에서 돌아온 후 게임을 완전히 재시작
           if (mounted) {
+            // DifficultyManager 리셋
+            DifficultyManager().reset();
             // StageManager를 먼저 리셋 (싱글톤이므로 명시적 리셋 필요)
             StageManager.instance.reset();
 
@@ -155,10 +174,10 @@ class _GameScreenState extends State<GameScreen> {
               game.onShowStageClearDialog = _showStageClearDialog;
             });
 
-            // 시작 다이얼로그 표시
+            // 난이도 선택 다이얼로그부터 다시 시작
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                _showStartDialog();
+                _showDifficultySelectDialog();
               }
             });
           }
@@ -198,14 +217,15 @@ class _GameScreenState extends State<GameScreen> {
             left: 20,
             child: GestureDetector(
               onTap: () {
-                // StageManager를 리셋하고 새 게임 인스턴스 생성
+                // DifficultyManager와 StageManager를 리셋하고 새 게임 인스턴스 생성
+                DifficultyManager().reset();
                 StageManager.instance.reset();
                 setState(() {
                   game = LottyMemoryGame();
                   game.onShowGameOverDialog = _showGameOverDialog;
                   game.onShowStageClearDialog = _showStageClearDialog;
                 });
-                _showStartDialog();
+                _showDifficultySelectDialog();
               },
               child: CircleAvatar(
                 backgroundColor: Colors.white.withValues(alpha: 0.3),
