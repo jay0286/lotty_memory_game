@@ -7,7 +7,11 @@ class SoundManager {
   factory SoundManager() => _instance;
   SoundManager._internal();
 
-  late AudioPlayer _audioPlayer;
+  // AudioPlayer 풀 (동시 재생을 위해)
+  final List<AudioPlayer> _audioPlayerPool = [];
+  static const int _poolSize = 5; // 동시에 5개까지 재생 가능
+  int _currentPlayerIndex = 0;
+
   late AudioPlayer _bgmPlayer; // BGM 전용 플레이어
   bool _soundEnabled = false;
   bool _bgmEnabled = true;
@@ -31,14 +35,57 @@ class SoundManager {
   }
 
   /// 사운드 매니저 초기화
-  void initialize() {
+  void initialize() async {
     if (_isInitialized) {
       return;
     }
 
-    _audioPlayer = AudioPlayer();
+    // AudioPlayer 풀 초기화
+    for (int i = 0; i < _poolSize; i++) {
+      final player = AudioPlayer();
+      // 각 플레이어의 오디오 컨텍스트 설정 (iOS/Android)
+      await player.setAudioContext(
+        AudioContext(
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: {
+              AVAudioSessionOptions.mixWithOthers,
+            },
+          ),
+          android: AudioContextAndroid(
+            isSpeakerphoneOn: false,
+            stayAwake: false,
+            contentType: AndroidContentType.sonification,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.gain,
+          ),
+        ),
+      );
+      _audioPlayerPool.add(player);
+    }
+
+    // BGM 플레이어 초기화
     _bgmPlayer = AudioPlayer();
+    await _bgmPlayer.setAudioContext(
+      AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {
+            AVAudioSessionOptions.mixWithOthers,
+          },
+        ),
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.gain,
+        ),
+      ),
+    );
+
     _isInitialized = true;
+    _log('🔊 사운드 매니저 초기화: AudioPlayer 풀 크기 = $_poolSize');
   }
 
   /// 사운드 활성화 (사용자 상호작용 후)
@@ -52,9 +99,11 @@ class SoundManager {
     }
 
     try {
-      // 사운드 테스트
+      // 사운드 테스트 (첫 번째 플레이어 사용)
       _log('🔊 테스트 사운드 재생 시도...');
-      await _audioPlayer.play(_getAssetSource('block_drop.wav'));
+      if (_audioPlayerPool.isNotEmpty) {
+        await _audioPlayerPool[0].play(_getAssetSource('block_drop.wav'));
+      }
       _soundEnabled = true;
       _log('🔊 사운드 매니저 활성화 완료!');
     } catch (e) {
@@ -65,7 +114,14 @@ class SoundManager {
     }
   }
 
-  /// 사운드 재생
+  /// 풀에서 다음 사용 가능한 AudioPlayer 가져오기
+  AudioPlayer _getNextPlayer() {
+    final player = _audioPlayerPool[_currentPlayerIndex];
+    _currentPlayerIndex = (_currentPlayerIndex + 1) % _poolSize;
+    return player;
+  }
+
+  /// 사운드 재생 (풀에서 다음 플레이어 사용)
   void playSound(String soundFile, {double volume = 1.0}) async {
     _initializeIfNeeded();
 
@@ -77,9 +133,14 @@ class SoundManager {
     try {
       final source = _getAssetSource(soundFile);
 
+      // 풀에서 다음 플레이어 가져오기
+      final player = _getNextPlayer();
+
       // 볼륨 설정 (0.0 ~ 1.0)
-      await _audioPlayer.setVolume(volume.clamp(0.0, 1.0));
-      await _audioPlayer.play(source);
+      await player.setVolume(volume.clamp(0.0, 1.0));
+
+      // 재생 (await 없이 fire-and-forget으로 빠르게 재생)
+      player.play(source);
     } catch (e) {
       _log('🔊 사운드 재생 실패: $e');
     }
@@ -192,7 +253,12 @@ class SoundManager {
 
   /// 사운드 매니저 정리
   void dispose() {
-    _audioPlayer.dispose();
+    // AudioPlayer 풀 정리
+    for (final player in _audioPlayerPool) {
+      player.dispose();
+    }
+    _audioPlayerPool.clear();
+
     _bgmPlayer.dispose();
   }
 }
