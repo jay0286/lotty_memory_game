@@ -23,6 +23,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   bool _isProcessingMatch = false;
   double _matchCheckTimer = 0.0;
 
+  // Queue for next pair selection during match processing
+  PigCard? _queuedFirstCard;
+  PigCard? _queuedSecondCard;
+
   final Random _random = Random();
 
   // Persistent values across stages
@@ -478,7 +482,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
   void _startPreview() {
     _previewTimer = 0.0;
     for (final card in _cards) {
-      card.flipToFaceUp();
+      // Set cards face up instantly without animation so they can be clicked immediately
+      card.setFaceUpInstant();
     }
   }
 
@@ -499,8 +504,23 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Handle card tap
   void _onCardTapped(PigCard card) {
-    if (!gameState.isGameActive || _isProcessingMatch || _isHintRevealing || _isShuffling) return;
+    // Allow card tap during shuffling, preview or hint reveal to skip to game start
+    if (gameState.state == GameState.shuffling ||
+        gameState.state == GameState.preview ||
+        _isHintRevealing) {
+      // Skip preview/hint and start game immediately
+      _skipToGameStart(card);
+      return;
+    }
+
+    if (!gameState.isGameActive || _isShuffling) return;
     if (card.state != CardState.faceDown) return;
+
+    // Don't allow selecting cards that are already selected in current or queued pair
+    if (card == _firstSelectedCard || card == _secondSelectedCard ||
+        card == _queuedFirstCard || card == _queuedSecondCard) {
+      return;
+    }
 
     // Play card select sound
     SoundManager().playCardSelect();
@@ -516,7 +536,56 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       // Second card selected
       _secondSelectedCard = card;
       _isProcessingMatch = true;
+    } else if (_isProcessingMatch && _queuedFirstCard == null) {
+      // Third card selected (queued first card)
+      _queuedFirstCard = card;
+    } else if (_isProcessingMatch && _queuedSecondCard == null && card != _queuedFirstCard) {
+      // Fourth card selected (queued second card)
+      _queuedSecondCard = card;
     }
+  }
+
+  /// Skip preview/hint reveal and start game with selected card
+  void _skipToGameStart(PigCard selectedCard) {
+    // End hint reveal if active
+    if (_isHintRevealing) {
+      _isHintRevealing = false;
+      _hintRevealTimer = 0.0;
+    }
+
+    // End shuffling/preview if active and transition to playing
+    if (gameState.state == GameState.shuffling) {
+      _shufflingTimer = _shufflingDuration; // Force shuffling to end
+      // Transition shuffling -> preview -> playing
+      gameState.startPreview();
+      _previewTimer = _previewDuration; // Also end preview immediately
+    }
+
+    if (gameState.state == GameState.preview) {
+      _previewTimer = _previewDuration; // Force preview to end
+    }
+
+    // Start the game if not already active
+    if (!gameState.isGameActive) {
+      gameState.startGame();
+    }
+
+    // Play card select sound
+    SoundManager().playCardSelect();
+
+    // Flip all cards face down except the selected one
+    for (final card in _cards) {
+      if (card != selectedCard && card.state == CardState.faceUp) {
+        card.flipToFaceDown();
+      }
+    }
+
+    // Keep the selected card face up and set it as first selection
+    // If it's already face up (from preview/hint), keep it that way
+    if (selectedCard.state == CardState.faceDown) {
+      selectedCard.flipToFaceUp();
+    }
+    _firstSelectedCard = selectedCard;
   }
 
   /// Check if two selected cards match
@@ -577,9 +646,29 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _spawnPowerupOnRandomCard();
     }
 
-    // Reset selection
+    // Reset current selection
     _firstSelectedCard = null;
     _secondSelectedCard = null;
+
+    // Process queued cards if any
+    if (_queuedFirstCard != null) {
+      _firstSelectedCard = _queuedFirstCard;
+      _queuedFirstCard = null;
+
+      if (_queuedSecondCard != null) {
+        _secondSelectedCard = _queuedSecondCard;
+        _queuedSecondCard = null;
+        // Keep processing match for the queued pair
+        // Set timer to almost complete for nearly instant check (0.1s delay for visual feedback)
+        _isProcessingMatch = true;
+        _matchCheckTimer = GameConfig.matchCheckDelay - 0.1;
+      } else {
+        // Only first card was queued, wait for second
+        _isProcessingMatch = false;
+      }
+    } else {
+      _isProcessingMatch = false;
+    }
   }
 
   /// Spawn a powerup on a random face-down card
@@ -664,10 +753,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
     print('[Powerup] Hint used! Remaining hints: ${gameState.hints}');
 
-    // Flip all face-down cards to face up
+    // Flip all face-down cards to face up instantly (no animation) so they can be clicked immediately
     for (final card in _cards) {
       if (card.state == CardState.faceDown) {
-        card.flipToFaceUp();
+        card.setFaceUpInstant();
       }
     }
   }
@@ -792,6 +881,10 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _matchCheckTimer = 0.0;
     _shufflingTimer = 0.0;
     _previewTimer = 0.0;
+
+    // Reset queued cards
+    _queuedFirstCard = null;
+    _queuedSecondCard = null;
 
     // Reset hint reveal state
     _isHintRevealing = false;

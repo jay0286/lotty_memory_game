@@ -128,7 +128,8 @@ class PigCard extends SpriteComponent with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    if (_state == CardState.matched || _isFlipping) return;
+    if (_state == CardState.matched) return;
+    // Don't block taps during flipping - let game logic decide
     // Don't flip here - let the game logic handle it
     onTap?.call(this);
   }
@@ -159,6 +160,22 @@ class PigCard extends SpriteComponent with TapCallbacks {
     if (_state == CardState.faceDown) return;
     _state = CardState.faceDown;
     _isFlipping = true;
+  }
+
+  /// Set face up instantly without animation (for preview)
+  void setFaceUpInstant() {
+    _state = CardState.faceUp;
+    _flipProgress = 1.0;
+    _isFlipping = false;
+    sprite = frontSprite;
+  }
+
+  /// Set face down instantly without animation
+  void setFaceDownInstant() {
+    _state = CardState.faceDown;
+    _flipProgress = 0.0;
+    _isFlipping = false;
+    sprite = backSprite;
   }
 
   /// Mark card as matched and play success animation
