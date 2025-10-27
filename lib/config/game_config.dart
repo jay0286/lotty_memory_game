@@ -100,8 +100,12 @@ class GameConfig {
   /// 셔플 애니메이션 시간 (초)
   static const double shufflingDuration = 1.0;
 
-  /// 매칭 확인 딜레이 (초)
-  static const double matchCheckDelay = 1.0;
+  /// 매칭 확인 딜레이 (초) - 두 카드를 선택한 후 매칭을 확인하기까지의 대기 시간
+  static const double matchCheckDelay = 0.6;
+
+  /// 큐에 있는 다음 페어 매칭 확인 딜레이 (초) - matchCheckDelay에서 이 값을 뺀 시간 후 체크
+  /// 예: matchCheckDelay=0.6, queuedPairCheckOffset=0.5 → 0.1초 후 체크
+  static const double queuedPairCheckOffset = 0.5;
 
 
   // ==================== 파워업 설정 ====================

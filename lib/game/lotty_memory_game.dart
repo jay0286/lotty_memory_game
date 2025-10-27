@@ -654,9 +654,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
         // Take second card from queue
         _secondSelectedCard = _queuedCards.removeAt(0);
         // Keep processing match for the queued pair
-        // Set timer to almost complete for nearly instant check (0.1s delay for visual feedback)
+        // Set timer to almost complete for faster check (configurable delay for visual feedback)
         _isProcessingMatch = true;
-        _matchCheckTimer = GameConfig.matchCheckDelay - 0.1;
+        _matchCheckTimer = GameConfig.matchCheckDelay - GameConfig.queuedPairCheckOffset;
       } else {
         // Only first card was queued, wait for second
         _isProcessingMatch = false;
