@@ -89,6 +89,7 @@ class SoundManager {
   }
 
   /// 사운드 활성화 (사용자 상호작용 후)
+  /// iOS에서는 모든 AudioPlayer를 사용자 제스처 시점에 활성화해야 함
   Future<void> enableSound() async {
     _initializeIfNeeded();
     _log('🔊 사운드 활성화 시도, 현재 상태: $_soundEnabled');
@@ -99,13 +100,27 @@ class SoundManager {
     }
 
     try {
-      // 사운드 테스트 (첫 번째 플레이어 사용)
-      _log('🔊 테스트 사운드 재생 시도...');
-      if (_audioPlayerPool.isNotEmpty) {
-        await _audioPlayerPool[0].play(_getAssetSource('block_drop.wav'));
+      // iOS에서는 모든 플레이어를 활성화해야 함
+      // 매우 짧은 무음 사운드로 각 플레이어 활성화
+      _log('🔊 AudioPlayer 풀 활성화 시도 (${_audioPlayerPool.length}개)...');
+
+      final testSource = _getAssetSource('block_drop.wav');
+
+      // 모든 플레이어를 순차적으로 활성화
+      for (int i = 0; i < _audioPlayerPool.length; i++) {
+        try {
+          final player = _audioPlayerPool[i];
+          await player.setVolume(0.0); // 무음으로 설정
+          await player.play(testSource);
+          await player.stop(); // 즉시 정지
+          _log('🔊 플레이어 [$i] 활성화 완료');
+        } catch (e) {
+          _log('🔊 플레이어 [$i] 활성화 실패: $e');
+        }
       }
+
       _soundEnabled = true;
-      _log('🔊 사운드 매니저 활성화 완료!');
+      _log('🔊 사운드 매니저 활성화 완료! (${_audioPlayerPool.length}개 플레이어)');
     } catch (e) {
       _log('🔊 사운드 매니저 활성화 실패: $e');
       // 웹 환경에서는 사운드가 작동하지 않을 수 있으므로 강제로 활성화
@@ -125,9 +140,10 @@ class SoundManager {
   void playSound(String soundFile, {double volume = 1.0}) async {
     _initializeIfNeeded();
 
-    // 강제로 사운드 활성화 시도
+    // iOS에서 활성화되지 않았으면 로그만 남기고 무시
     if (!_soundEnabled) {
-      await enableSound();
+      _log('🔊 사운드가 활성화되지 않음. enableSound()를 먼저 호출하세요.');
+      return;
     }
 
     try {
