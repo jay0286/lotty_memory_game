@@ -9,6 +9,7 @@ import '../utils/asset_manager.dart';
 import '../components/pig_card.dart';
 import '../components/shadow_layer.dart';
 import '../config/game_config.dart';
+import '../managers/sound_manager.dart';
 import 'game_state.dart';
 import 'stage_config.dart';
 
@@ -80,6 +81,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Load stages
     await StageManager.instance.loadStages();
 
+    // Initialize sound manager
+    SoundManager().initialize();
+
     // Load and add background
     await _loadBackground();
 
@@ -100,6 +104,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (_isGameReady && _cards.isEmpty) {
       _gameStopwatch.start();
       _initializeCards();
+      // Start BGM
+      SoundManager().playBGM();
     }
   }
 
@@ -496,6 +502,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (!gameState.isGameActive || _isProcessingMatch || _isHintRevealing || _isShuffling) return;
     if (card.state != CardState.faceDown) return;
 
+    // Play card select sound
+    SoundManager().playCardSelect();
+
     // Flip the card to face up
     card.flipToFaceUp();
 
@@ -515,6 +524,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     if (_firstSelectedCard == null || _secondSelectedCard == null) return;
 
     if (_firstSelectedCard!.cardValue == _secondSelectedCard!.cardValue) {
+      // Play match success sound
+      SoundManager().playMatchSuccess();
+
       // Check if either card has a powerup
       _collectPowerup(_firstSelectedCard!);
       _collectPowerup(_secondSelectedCard!);
@@ -524,6 +536,8 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _secondSelectedCard!.setMatched();
       gameState.registerMatch();
     } else {
+      // Play match fail sound
+      SoundManager().playMatchFail();
       // Check if either card has a powerup (penalty shuffle trigger)
       final hasPowerup = _firstSelectedCard!.hasPowerup || _secondSelectedCard!.hasPowerup;
 
@@ -713,9 +727,13 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     pauseTimer();
 
     if (isWin) {
+      // Play stage clear sound
+      SoundManager().playStageClear();
       // Show stage clear dialog
       onShowStageClearDialog?.call();
     } else {
+      // Play game over sound
+      SoundManager().playGameOver();
       // Show game over dialog
       onShowGameOverDialog?.call();
     }
