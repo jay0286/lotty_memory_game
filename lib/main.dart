@@ -247,14 +247,16 @@ class _GameScreenState extends State<GameScreen> {
             left: 0,
             right: 0,
             child: Center(
-              child: ValueListenableBuilder<Map<String, dynamic>>(
-                valueListenable: game.stageInfoNotifier,
-                builder: (context, stageInfo, child) {
-                  return StageInfoWidget(
-                    stageNumber: stageInfo['number'] as int,
-                    stageName: stageInfo['name'] as String,
-                  );
-                },
+              child: IgnorePointer(
+                child: ValueListenableBuilder<Map<String, dynamic>>(
+                  valueListenable: game.stageInfoNotifier,
+                  builder: (context, stageInfo, child) {
+                    return StageInfoWidget(
+                      stageNumber: stageInfo['number'] as int,
+                      stageName: stageInfo['name'] as String,
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -262,12 +264,14 @@ class _GameScreenState extends State<GameScreen> {
           Positioned(
             top: 20,
             right: 20,
-            child: Row(
-              children: [
-                HintCountWidget(hintNotifier: game.hintCountNotifier),
-                const SizedBox(width: 10),
-                LivesCountWidget(livesNotifier: game.livesCountNotifier),
-              ],
+            child: IgnorePointer(
+              child: Row(
+                children: [
+                  HintCountWidget(hintNotifier: game.hintCountNotifier),
+                  const SizedBox(width: 10),
+                  LivesCountWidget(livesNotifier: game.livesCountNotifier),
+                ],
+              ),
             ),
           ),
 
