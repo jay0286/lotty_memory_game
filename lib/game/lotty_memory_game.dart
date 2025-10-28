@@ -108,7 +108,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _gameStopwatch.start();
       _initializeCards();
       // Start BGM
-      SoundManager().playBGM();
+      // SoundManager().playBGM(volume: 0.01);
     }
   }
 
