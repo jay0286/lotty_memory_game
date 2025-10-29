@@ -72,6 +72,7 @@ class SoundManager {
   }
 
   Future<void> _preloadAudioAssets() async {
+    // Preload sound effects
     for (final soundFile in _soundFiles) {
       try {
         final source = await _soloud!.loadAsset('assets/sounds/$soundFile');
@@ -81,6 +82,14 @@ class SoundManager {
       }
     }
     _log('🔊 사운드 파일 프리로딩 완료 (${_loadedSounds.length}개)');
+
+    // Preload BGM
+    try {
+      _bgmSource = await _soloud!.loadAsset('assets/sounds/$bgmFileName');
+      _log('🎵 BGM 캐싱 완료: $bgmFileName');
+    } catch (e) {
+      _log('🎵 BGM 캐싱 실패: $e');
+    }
   }
 
   /// 사운드 활성화 (사용자 상호작용 후)
@@ -180,7 +189,7 @@ class SoundManager {
     playSound('game_over.mp3', volume: 0.5);
   }
 
-  /// BGM 재생 (게임 시작 시)
+  /// BGM 재생 (게임 시작 시 - 캐싱된 BGM 재생)
   Future<void> playBGM({double? volume}) async {
     await _initializeIfNeeded();
     if (!_bgmEnabled || _soloud == null) return;
@@ -189,20 +198,23 @@ class SoundManager {
       // 기존 BGM 정지
       if (_bgmHandle != null) {
         await _soloud!.stop(_bgmHandle!);
+        _bgmHandle = null;
+      }
+
+      // BGM 소스가 캐싱되어 있는지 확인
+      if (_bgmSource == null) {
+        _log('🎵 BGM 소스가 캐싱되지 않음, 재생 건너뜀');
+        return;
       }
 
       final bgmVolume = (volume ?? bgmDefaultVolume).clamp(0.0, 1.0);
-
-      // BGM 소스가 없으면 로드
-      _bgmSource ??=
-          await _soloud!.loadAsset('assets/sounds/$bgmFileName');
 
       _bgmHandle = await _soloud!.play(
         _bgmSource!,
         volume: bgmVolume,
         looping: true,
       );
-      _log('🎵 BGM 재생 시작: $bgmFileName');
+      _log('🎵 BGM 재생 시작 (캐싱된 소스): $bgmFileName');
     } catch (e) {
       // BGM 재생 실패 시 조용히 무시
       _log('🎵 BGM 재생 실패: $e');

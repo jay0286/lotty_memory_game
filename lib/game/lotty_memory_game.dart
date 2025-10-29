@@ -109,7 +109,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
       _gameStopwatch.start();
       _initializeCards();
       // Start BGM
-      // SoundManager().playBGM(volume: 0.01);
+      SoundManager().playBGM(volume: 0.3);
     }
   }
 
@@ -811,6 +811,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     // Pause timer when dialog shows
     pauseTimer();
 
+    // Stop BGM when popup shows
+    SoundManager().stopBGM();
+
     if (isWin) {
       // Play stage clear sound
       SoundManager().playStageClear();
@@ -836,6 +839,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     _currentLives = 0;
     _currentHints = 0;
 
+    // Resume BGM with cached source
+    SoundManager().playBGM(volume: 0.3);
+
     // Resume timer
     resumeTimer();
     _loadNextStage();
@@ -843,6 +849,9 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   /// Go to next stage (after stage clear)
   void goToNextStage() {
+    // Resume BGM with cached source
+    SoundManager().playBGM(volume: 0.3);
+
     // Resume timer for next stage
     resumeTimer();
 
