@@ -85,7 +85,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
     await StageManager.instance.loadStages();
 
     // Initialize sound manager
-    SoundManager().initialize();
+    await SoundManager().initialize();
 
     // Load and add background
     await _loadBackground();

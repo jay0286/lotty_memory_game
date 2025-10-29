@@ -44,7 +44,7 @@ dependencies:
   cloud_firestore: ^5.5.0
 
   # Audio
-  flame_audio: ^2.1.0
+  flutter_soloud: ^3.3.9
 
 dev_dependencies:
   flutter_test:

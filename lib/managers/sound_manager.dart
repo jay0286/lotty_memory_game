@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flame_audio/flame_audio.dart';
-
-import '../utils/web_audio_unlocker.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 /// 게임 사운드 효과를 관리하는 매니저 클래스
 class SoundManager {
@@ -11,19 +9,18 @@ class SoundManager {
   factory SoundManager() => _instance;
   SoundManager._internal();
 
-  // AudioPool 풀 (동시 재생을 위해)
-  final Map<String, AudioPool> _audioPools = {};
-  static const int _defaultPoolSize = 5; // 기본 풀 크기
-  static const int _webPoolSize = 2; // 웹 AudioContext 제한 고려
-  late final int _configuredPoolSize;
-  bool _webAudioUnlocked = false;
+  SoLoud? _soloud;
+  final Map<String, AudioSource> _loadedSounds = {};
+  AudioSource? _bgmSource;
+  SoundHandle? _bgmHandle;
 
   bool _soundEnabled = false;
   bool _bgmEnabled = true;
   bool _isInitialized = false;
+  Future<void>? _initializationFuture;
 
   // 사운드 설정
-  static const double bgmDefaultVolume = 0.01; // BGM 기본 볼륨 (30%)
+  static const double bgmDefaultVolume = 0.01; // BGM 기본 볼륨 (1%)
   static const String bgmFileName = 'Joyful_Hearts.mp3'; // 기본 BGM 파일
 
   // 미리 로드할 사운드 파일 목록
@@ -42,55 +39,53 @@ class SoundManager {
     }
   }
 
-  void _initializeIfNeeded() {
-    if (!_isInitialized) {
-      initialize();
+  Future<void> _initializeIfNeeded() {
+    if (_isInitialized) {
+      return Future.value();
     }
+    return initialize();
   }
 
   /// 사운드 매니저 초기화
-  void initialize() async {
+  Future<void> initialize() {
     if (_isInitialized) {
-      return;
+      return Future.value();
     }
-
-    _configuredPoolSize = kIsWeb ? _webPoolSize : _defaultPoolSize;
-
-    // Flame Audio 설정
-    FlameAudio.updatePrefix('assets/sounds/');
-    // await FlameAudio.bgm.initialize();
-
-    _isInitialized = true;
-    _log('🔊 사운드 매니저 초기화: AudioPool 최대 플레이어 = $_configuredPoolSize');
-
-    // 모든 사운드 효과를 로컬에 캐시하고 풀을 준비합니다.
-    unawaited(_preloadSounds());
+    return _initializationFuture ??= _performInitialization();
   }
 
-  /// 사운드 효과 파일을 로컬에 캐시하고 풀을 준비합니다.
-  Future<void> _preloadSounds() async {
+  Future<void> _performInitialization() async {
     try {
-      _log('🔊 사운드 파일 프리로딩 시작...');
-      await FlameAudio.audioCache.loadAll(_soundFiles);
-      await FlameAudio.audioCache.load(bgmFileName);
+      _soloud = SoLoud.instance;
+      await _soloud!.init();
+      _log('🔊 SoLoud 초기화 완료');
 
-      for (final sound in _soundFiles) {
-        final pool = await FlameAudio.createPool(
-          sound,
-          minPlayers: 1,
-          maxPlayers: _configuredPoolSize,
-        );
-        _audioPools[sound] = pool;
-      }
-      _log('🔊 ${_soundFiles.length}개의 사운드 파일 프리로딩 및 풀 준비 완료!');
+      // 프리로드 완료 후에 초기화 완료로 표시
+      await _preloadAudioAssets();
+      _isInitialized = true;
+      _log('🔊 사운드 매니저 초기화 완료');
     } catch (e) {
-      _log('🔊 사운드 파일 프리로딩 실패: $e');
+      _log('🔊 SoLoud 초기화 실패: $e');
+      _isInitialized = false;
+      _soloud = null;
     }
+  }
+
+  Future<void> _preloadAudioAssets() async {
+    for (final soundFile in _soundFiles) {
+      try {
+        final source = await _soloud!.loadAsset('assets/sounds/$soundFile');
+        _loadedSounds[soundFile] = source;
+      } catch (e) {
+        _log('🔊 사운드 프리로드 실패 ($soundFile): $e');
+      }
+    }
+    _log('🔊 사운드 파일 프리로딩 완료 (${_loadedSounds.length}개)');
   }
 
   /// 사운드 활성화 (사용자 상호작용 후)
   Future<void> enableSound() async {
-    _initializeIfNeeded();
+    await _initializeIfNeeded();
     _log('🔊 사운드 활성화 시도, 현재 상태: $_soundEnabled');
 
     if (_soundEnabled) {
@@ -98,32 +93,65 @@ class SoundManager {
       return;
     }
 
-    await _ensureWebAudioUnlocked();
-
-    // 프리로딩을 통해 사운드 지연이 해결되었으므로, 별도의 '웜업' 없이 상태만 변경합니다.
     _soundEnabled = true;
-    _log('🔊 사운드 활성화 완료!');
+    _log('🔊 사운드 매니저 활성화 완료!');
   }
 
-  /// 사운드 재생 (AudioPool 사용)
-  void playSound(String soundFile, {double volume = 1.0}) async {
-    _initializeIfNeeded();
-
-    if (!_soundEnabled) {
-      _log('🔊 사운드가 활성화되지 않음. enableSound()를 먼저 호출하세요.');
+  /// 동기적 사운드 활성화 (iOS 크롬 대응 - 사용자 제스처 내에서 호출)
+  void enableSoundSync() {
+    if (_soundEnabled) {
+      _log('🔊 사운드 이미 활성화됨');
       return;
     }
 
-    try {
-      final pool = _audioPools[soundFile];
-      final clampedVolume = volume.clamp(0.0, 1.0);
-      if (pool != null) {
-        unawaited(pool.start(volume: clampedVolume));
-      } else {
-        unawaited(FlameAudio.play(soundFile, volume: clampedVolume));
+    // 초기화가 안 되어 있으면 나중에 다시 시도
+    if (!_isInitialized) {
+      _log('🔊 사운드 매니저 초기화 중... 나중에 다시 시도');
+      initialize().then((_) {
+        if (!_soundEnabled) {
+          _soundEnabled = true;
+          _log('🔊 사운드 매니저 활성화 완료 (동기)!');
+        }
+      });
+      return;
+    }
+
+    _soundEnabled = true;
+    _log('🔊 사운드 매니저 활성화 완료 (동기)!');
+  }
+
+  /// 사운드 재생
+  Future<void> playSound(String soundFile, {double volume = 1.0}) async {
+    // 초기화 대기
+    await _initializeIfNeeded();
+
+    // 초기화 실패 시 재생 건너뛰기
+    if (!_isInitialized || _soloud == null) {
+      _log('🔊 사운드 매니저가 초기화되지 않아 재생을 건너뜀 ($soundFile)');
+      return;
+    }
+
+    if (!_soundEnabled) {
+      await enableSound();
+      if (!_soundEnabled) {
+        _log('🔊 사운드가 아직 활성화되지 않아 재생을 건너뜀 ($soundFile)');
+        return;
       }
+    }
+
+    try {
+      final clampedVolume = volume.clamp(0.0, 1.0).toDouble();
+      AudioSource? source = _loadedSounds[soundFile];
+
+      if (source == null) {
+        // 프리로드되지 않은 경우 즉시 로드
+        source = await _soloud!.loadAsset('assets/sounds/$soundFile');
+        _loadedSounds[soundFile] = source;
+      }
+
+      await _soloud!.play(source, volume: clampedVolume);
     } catch (e) {
-      _log('🔊 사운드 재생 실패: $e');
+      _log('🔊 사운드 재생 실패 ($soundFile): $e');
     }
   }
 
@@ -153,62 +181,80 @@ class SoundManager {
   }
 
   /// BGM 재생 (게임 시작 시)
-  void playBGM({double? volume}) async {
-    _initializeIfNeeded();
-    if (!_bgmEnabled) return;
+  Future<void> playBGM({double? volume}) async {
+    await _initializeIfNeeded();
+    if (!_bgmEnabled || _soloud == null) return;
 
     try {
-      await FlameAudio.audioCache.load(bgmFileName);
-      await FlameAudio.bgm.play(
-        bgmFileName,
-        volume: (volume ?? bgmDefaultVolume).clamp(0.0, 1.0),
+      // 기존 BGM 정지
+      if (_bgmHandle != null) {
+        await _soloud!.stop(_bgmHandle!);
+      }
+
+      final bgmVolume = (volume ?? bgmDefaultVolume).clamp(0.0, 1.0);
+
+      // BGM 소스가 없으면 로드
+      _bgmSource ??=
+          await _soloud!.loadAsset('assets/sounds/$bgmFileName');
+
+      _bgmHandle = await _soloud!.play(
+        _bgmSource!,
+        volume: bgmVolume,
+        looping: true,
       );
       _log('🎵 BGM 재생 시작: $bgmFileName');
     } catch (e) {
+      // BGM 재생 실패 시 조용히 무시
       _log('🎵 BGM 재생 실패: $e');
     }
   }
 
   /// BGM 정지
-  void stopBGM() async {
-    if (!_isInitialized) return;
+  Future<void> stopBGM() async {
+    if (!_isInitialized || _soloud == null) return;
     try {
-      await FlameAudio.bgm.stop();
+      if (_bgmHandle != null) {
+        await _soloud!.stop(_bgmHandle!);
+        _bgmHandle = null;
+      }
       _log('🎵 BGM 정지');
     } catch (e) {
+      // BGM 정지 실패 시 조용히 무시
       _log('🎵 BGM 정지 실패: $e');
     }
   }
 
   /// BGM 일시정지
-  void pauseBGM() async {
-    if (!_isInitialized) return;
+  Future<void> pauseBGM() async {
+    if (!_isInitialized || _soloud == null || _bgmHandle == null) return;
     try {
-      await FlameAudio.bgm.pause();
+      _soloud!.pauseSwitch(_bgmHandle!);
       _log('🎵 BGM 일시정지');
     } catch (e) {
+      // BGM 일시정지 실패 시 조용히 무시
       _log('🎵 BGM 일시정지 실패: $e');
     }
   }
 
   /// BGM 재개
-  void resumeBGM() async {
-    if (!_isInitialized) return;
+  Future<void> resumeBGM() async {
+    if (!_isInitialized || _soloud == null || _bgmHandle == null) return;
     try {
-      await FlameAudio.bgm.resume();
+      _soloud!.pauseSwitch(_bgmHandle!);
       _log('🎵 BGM 재개');
     } catch (e) {
+      // BGM 재개 실패 시 조용히 무시
       _log('🎵 BGM 재개 실패: $e');
     }
   }
 
   /// BGM 볼륨 설정
-  void setBGMVolume(double volume) async {
-    if (!_isInitialized) return;
+  Future<void> setBGMVolume(double volume) async {
+    if (!_isInitialized || _soloud == null || _bgmHandle == null) return;
     try {
-      await FlameAudio.bgm.audioPlayer
-          .setVolume(volume.clamp(0.0, 1.0));
+      _soloud!.setVolume(_bgmHandle!, volume.clamp(0.0, 1.0));
     } catch (e) {
+      // BGM 볼륨 설정 실패 시 조용히 무시
       _log('🎵 BGM 볼륨 설정 실패: $e');
     }
   }
@@ -228,19 +274,35 @@ class SoundManager {
 
   /// 사운드 매니저 정리
   Future<void> dispose() async {
-    await Future.wait(_audioPools.values.map((pool) => pool.dispose()));
-    _audioPools.clear();
-    await FlameAudio.bgm.dispose();
-  }
-
-  Future<void> _ensureWebAudioUnlocked() async {
-    if (!kIsWeb || _webAudioUnlocked) return;
+    if (!_isInitialized || _soloud == null) return;
     try {
-      await unlockWebAudioContext();
-      _webAudioUnlocked = true;
-      _log('🔊 WebAudio 컨텍스트 언락 완료');
+      // BGM 정지
+      if (_bgmHandle != null) {
+        await _soloud!.stop(_bgmHandle!);
+        _bgmHandle = null;
+      }
+
+      // 로드된 모든 사운드 해제
+      for (final source in _loadedSounds.values) {
+        _soloud!.disposeSource(source);
+      }
+      _loadedSounds.clear();
+
+      // BGM 소스 해제
+      if (_bgmSource != null) {
+        _soloud!.disposeSource(_bgmSource!);
+        _bgmSource = null;
+      }
+
+      // SoLoud 정리
+      _soloud!.deinit();
     } catch (e) {
-      _log('🔊 WebAudio 컨텍스트 언락 실패: $e');
+      _log('🔊 사운드 매니저 정리 실패: $e');
+    } finally {
+      _initializationFuture = null;
+      _isInitialized = false;
+      _soundEnabled = false;
+      _soloud = null;
     }
   }
 }
