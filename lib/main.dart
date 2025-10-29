@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'game/lotty_memory_game.dart';
 import 'game/stage_config.dart';
-import 'components/ui/difficulty_select_dialog.dart';
 import 'components/ui/start_dialog.dart';
 import 'components/ui/game_over_dialog.dart';
 import 'components/ui/stage_clear_dialog.dart';
@@ -16,6 +15,7 @@ import 'managers/difficulty_manager.dart';
 import 'managers/sound_manager.dart';
 import 'services/ranking_service.dart';
 import 'screens/leaderboard_screen.dart';
+import 'screens/difficulty_select_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +45,11 @@ class GameApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const GameScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const DifficultySelectScreen(),
+        '/game': (context) => const GameScreen(),
+      },
     );
   }
 }
@@ -59,42 +63,50 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late LottyMemoryGame game;
-  bool _hasShownDifficultyDialog = false;
+  bool _hasShownStartDialog = false;
+  bool _isGameLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    // 난이도 선택 후 StageManager를 해당 난이도의 시작 스테이지로 설정
+    StageManager.instance.reset();
+
     game = LottyMemoryGame();
     // Set callbacks for showing dialogs
     game.onShowGameOverDialog = _showGameOverDialog;
     game.onShowStageClearDialog = _showStageClearDialog;
+
+    // 게임 로드 완료 대기
+    _waitForGameLoad();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Show difficulty dialog only once when the widget is first built
-    if (!_hasShownDifficultyDialog) {
-      _hasShownDifficultyDialog = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showDifficultySelectDialog();
-      });
+  /// 게임 리소스 로드 완료 대기
+  void _waitForGameLoad() async {
+    // 게임이 로드될 때까지 대기 (최대 10초)
+    int attempts = 0;
+    const maxAttempts = 100; // 10초 (100ms * 100)
+
+    while (!game.isGameReady && attempts < maxAttempts) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      attempts++;
     }
-  }
 
-  void _showDifficultySelectDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => DifficultySelectDialog(
-        onDifficultySelected: () {
-          // 난이도 선택 후 StageManager를 해당 난이도의 시작 스테이지로 설정
-          StageManager.instance.reset();
-          // 시작 다이얼로그 표시
-          _showStartDialog();
-        },
-      ),
-    );
+    if (mounted && game.isGameReady) {
+      setState(() {
+        _isGameLoaded = true;
+      });
+
+      // 로드 완료 후 시작 다이얼로그 표시
+      if (!_hasShownStartDialog) {
+        _hasShownStartDialog = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showStartDialog();
+          }
+        });
+      }
+    }
   }
 
   void _showStartDialog() {
@@ -120,13 +132,9 @@ class _GameScreenState extends State<GameScreen> {
             ),
           );
 
-          // 리더보드에서 돌아오면 난이도 선택부터 다시 시작
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _showDifficultySelectDialog();
-              }
-            });
+          // 리더보드에서 돌아오면 난이도 선택 화면으로 이동
+          if (context.mounted) {
+            Navigator.of(context).pushReplacementNamed('/');
           }
         },
       ),
@@ -163,26 +171,15 @@ class _GameScreenState extends State<GameScreen> {
             ),
           );
 
-          // 리더보드에서 돌아온 후 게임을 완전히 재시작
-          if (mounted) {
+          // 리더보드에서 돌아온 후 난이도 선택 화면으로 이동
+          if (context.mounted) {
             // DifficultyManager 리셋
             DifficultyManager().reset();
             // StageManager를 먼저 리셋 (싱글톤이므로 명시적 리셋 필요)
             StageManager.instance.reset();
 
-            // 새 게임 인스턴스 생성
-            setState(() {
-              game = LottyMemoryGame();
-              game.onShowGameOverDialog = _showGameOverDialog;
-              game.onShowStageClearDialog = _showStageClearDialog;
-            });
-
-            // 난이도 선택 다이얼로그부터 다시 시작
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _showDifficultySelectDialog();
-              }
-            });
+            // 난이도 선택 화면으로 이동
+            Navigator.of(context).pushReplacementNamed('/');
           }
         },
         onRetry: () {
@@ -214,80 +211,107 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           GameWidget(game: game),
 
-          // Close button at top left
-          Positioned(
-            top: 24,
-            left: 20,
-            child: GestureDetector(
-              onTap: () {
-                // DifficultyManager와 StageManager를 리셋하고 새 게임 인스턴스 생성
-                DifficultyManager().reset();
-                StageManager.instance.reset();
-                setState(() {
-                  game = LottyMemoryGame();
-                  game.onShowGameOverDialog = _showGameOverDialog;
-                  game.onShowStageClearDialog = _showStageClearDialog;
-                });
-                _showDifficultySelectDialog();
-              },
-              child: CircleAvatar(
-                backgroundColor: Colors.white.withValues(alpha: 0.3),
-                child: Icon(
-                  Icons.close,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  size: 32,
-                  weight: 900,
+          // 로딩 오버레이
+          if (!_isGameLoaded)
+            Container(
+              color: Colors.black.withValues(alpha: 0.8),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '게임 로딩 중...',
+                      style: TextStyle(
+                        fontFamily: 'TJJoyofsinging',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          // Stage number and Stage name display at top left
-          Positioned(
-            bottom: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: IgnorePointer(
-                child: ValueListenableBuilder<Map<String, dynamic>>(
-                  valueListenable: game.stageInfoNotifier,
-                  builder: (context, stageInfo, child) {
-                    return StageInfoWidget(
-                      stageNumber: stageInfo['number'] as int,
-                      stageName: stageInfo['name'] as String,
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-          // Timer, Hints and Lives display at top right
-          Positioned(
-            top: 20,
-            right: 20,
-            child: IgnorePointer(
-              child: Row(
-                children: [
-                  HintCountWidget(hintNotifier: game.hintCountNotifier),
-                  const SizedBox(width: 10),
-                  LivesCountWidget(livesNotifier: game.livesCountNotifier),
-                ],
-              ),
-            ),
-          ),
 
-          // Timer, Hints and Lives display at top right
-          Positioned(
-            top: 112,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: IgnorePointer(
-                child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
+          // Close button at top left (로딩 완료 후에만 표시)
+          if (_isGameLoaded)
+            Positioned(
+              top: 24,
+              left: 20,
+              child: GestureDetector(
+                onTap: () {
+                  // DifficultyManager와 StageManager를 리셋하고 난이도 선택 화면으로 이동
+                  DifficultyManager().reset();
+                  StageManager.instance.reset();
+                  Navigator.of(context).pushReplacementNamed('/');
+                },
+                child: CircleAvatar(
+                  backgroundColor: Colors.white.withValues(alpha: 0.3),
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    size: 32,
+                    weight: 900,
+                  ),
+                ),
               ),
             ),
-          ),
-          // Hint button at bottom center (always show, but disable when hints = 0)
-          ValueListenableBuilder<int>(
+          // Stage number and Stage name display at top left (로딩 완료 후에만 표시)
+          if (_isGameLoaded)
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: IgnorePointer(
+                  child: ValueListenableBuilder<Map<String, dynamic>>(
+                    valueListenable: game.stageInfoNotifier,
+                    builder: (context, stageInfo, child) {
+                      return StageInfoWidget(
+                        stageNumber: stageInfo['number'] as int,
+                        stageName: stageInfo['name'] as String,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          // Timer, Hints and Lives display at top right (로딩 완료 후에만 표시)
+          if (_isGameLoaded)
+            Positioned(
+              top: 20,
+              right: 20,
+              child: IgnorePointer(
+                child: Row(
+                  children: [
+                    HintCountWidget(hintNotifier: game.hintCountNotifier),
+                    const SizedBox(width: 10),
+                    LivesCountWidget(livesNotifier: game.livesCountNotifier),
+                  ],
+                ),
+              ),
+            ),
+
+          // Timer display (로딩 완료 후에만 표시)
+          if (_isGameLoaded)
+            Positioned(
+              top: 112,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: IgnorePointer(
+                  child: TimerWidget(elapsedTimeNotifier: game.elapsedTimeNotifier),
+                ),
+              ),
+            ),
+          // Hint button at bottom center (로딩 완료 후에만 표시)
+          if (_isGameLoaded)
+            ValueListenableBuilder<int>(
             valueListenable: game.hintCountNotifier,
             builder: (context, hintCount, child) {
               final bool hasHints = hintCount > 0;

@@ -1,53 +1,56 @@
 import 'package:flutter/material.dart';
-import '../../managers/difficulty_manager.dart';
-import '../../managers/sound_manager.dart';
+import '../managers/difficulty_manager.dart';
+import '../managers/sound_manager.dart';
 
-/// 난이도 선택 다이얼로그
-class DifficultySelectDialog extends StatelessWidget {
-  final VoidCallback onDifficultySelected;
-
-  const DifficultySelectDialog({
-    super.key,
-    required this.onDifficultySelected,
-  });
+/// 난이도 선택 화면 (전체 화면)
+class DifficultySelectScreen extends StatelessWidget {
+  const DifficultySelectScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 2,
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background_pool.png'),
+            fit: BoxFit.cover,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-            ),
-          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 헤더 (제목)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // 제목
                   Text(
                     '로티의 기억력 게임',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'TJJoyofsinging',
-                      fontSize: 32,
+                      fontSize: 48,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          offset: const Offset(3, 3),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // 부제목
+                  Text(
+                    '난이도를 선택하세요',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'TJJoyofsinging',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                       shadows: [
                         Shadow(
@@ -58,78 +61,44 @@ class DifficultySelectDialog extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '난이도를 선택하세요',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'TJJoyofsinging',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          offset: const Offset(1, 1),
-                          blurRadius: 3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // 내용
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+                  const SizedBox(height: 60),
                   // 쉬움 버튼
                   _DifficultyButton(
                     difficulty: Difficulty.easy,
-                    onPressed: () async {
-                      final nav = Navigator.of(context);
-                      // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
-                      await SoundManager().enableSound();
-                      DifficultyManager().setDifficulty(Difficulty.easy);
-                      nav.pop();
-                      onDifficultySelected();
-                    },
+                    onPressed: () => _selectDifficulty(context, Difficulty.easy),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   // 중간 버튼
                   _DifficultyButton(
                     difficulty: Difficulty.medium,
-                    onPressed: () async {
-                      final nav = Navigator.of(context);
-                      // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
-                      await SoundManager().enableSound();
-                      DifficultyManager().setDifficulty(Difficulty.medium);
-                      nav.pop();
-                      onDifficultySelected();
-                    },
+                    onPressed: () => _selectDifficulty(context, Difficulty.medium),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   // 어려움 버튼
                   _DifficultyButton(
                     difficulty: Difficulty.hard,
-                    onPressed: () async {
-                      final nav = Navigator.of(context);
-                      // iOS 오디오 활성화를 위해 사용자 터치 직후 호출
-                      await SoundManager().enableSound();
-                      DifficultyManager().setDifficulty(Difficulty.hard);
-                      nav.pop();
-                      onDifficultySelected();
-                    },
+                    onPressed: () => _selectDifficulty(context, Difficulty.hard),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  void _selectDifficulty(BuildContext context, Difficulty difficulty) async {
+    // iOS 크롬 대응: 사용자 제스처 내에서 즉시 오디오 언락
+    SoundManager().enableSoundSync();
+
+    // 난이도 설정
+    DifficultyManager().setDifficulty(difficulty);
+
+    // 게임 화면으로 이동
+    if (context.mounted) {
+      Navigator.of(context).pushReplacementNamed('/game');
+    }
   }
 }
 
@@ -192,16 +161,16 @@ class _DifficultyButtonState extends State<_DifficultyButton> {
         });
       },
       child: Container(
-        width: double.infinity,
+        width: 320,
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: _isPressed ? _getPressedColor() : _getButtonColor(),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
           ],
         ),

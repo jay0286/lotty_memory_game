@@ -48,6 +48,7 @@ class LottyMemoryGame extends FlameGame with KeyboardEvents {
 
   // Game ready state
   bool _isGameReady = false;
+  bool get isGameReady => _isGameReady;
 
   // Callbacks for showing dialogs
   void Function()? onShowGameOverDialog;
