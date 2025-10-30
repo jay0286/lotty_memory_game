@@ -42,7 +42,7 @@ class DifficultySelectDialog extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    '로티의 기억력 게임',
+                    '그리피의 메모리풀',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'TJJoyofsinging',
